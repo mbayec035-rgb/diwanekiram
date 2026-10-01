@@ -1,0 +1,296 @@
+/* =========================================================
+   DiwaneKiram — socle : reset, fond, typographie, utilitaires
+   ========================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  transition:
+    background-color var(--dur-slow) var(--ease-out),
+    color var(--dur-slow) var(--ease-out);
+}
+
+#root {
+  isolation: isolate;
+}
+
+img,
+svg,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+ol {
+  list-style: none;
+  padding: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+::selection {
+  background: rgba(34, 211, 238, 0.28);
+  color: var(--text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+  border-radius: var(--radius-xs);
+}
+
+/* ---- Dégradé de texte signature ---- */
+.text-gradient,
+.text-grad {
+  background: var(--accent-grad);
+  background-size: 180% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-pan 9s var(--ease-in-out) infinite;
+}
+
+@keyframes gradient-pan {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* ---- Texte arabe ---- */
+[dir='rtl'],
+.arabic {
+  font-family: var(--font-arabic);
+  font-feature-settings: 'liga' 1, 'calt' 1;
+  line-height: 2.05;
+  letter-spacing: 0;
+}
+
+:root[data-font='naskh'] {
+  --font-arabic: var(--font-arabic-alt);
+}
+
+/* ---- Fond ambiant ---- */
+.ambient-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ambient-aurora {
+  position: absolute;
+  width: 62vmax;
+  height: 62vmax;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.5;
+  will-change: transform;
+}
+
+.ambient-aurora:nth-child(1) {
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.32), transparent 62%);
+  top: -22vmax;
+  left: -14vmax;
+  animation: drift-a 26s var(--ease-in-out) infinite alternate;
+}
+
+.ambient-aurora:nth-child(2) {
+  background: radial-gradient(circle, rgba(94, 234, 212, 0.24), transparent 62%);
+  bottom: -26vmax;
+  right: -16vmax;
+  animation: drift-b 32s var(--ease-in-out) infinite alternate;
+}
+
+.ambient-aurora:nth-child(3) {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.18), transparent 60%);
+  top: 32%;
+  right: 18%;
+  animation: drift-c 38s var(--ease-in-out) infinite alternate;
+}
+
+:root[data-theme='light'] .ambient-aurora {
+  opacity: 0.34;
+}
+
+@keyframes drift-a {
+  to {
+    transform: translate3d(9vmax, 7vmax, 0) scale(1.14);
+  }
+}
+
+@keyframes drift-b {
+  to {
+    transform: translate3d(-11vmax, -6vmax, 0) scale(1.2);
+  }
+}
+
+@keyframes drift-c {
+  to {
+    transform: translate3d(-7vmax, 9vmax, 0) scale(0.88);
+  }
+}
+
+/* Trame d'arabesque (motif original, tracé simplifié) */
+.ambient-pattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%2322d3ee' stroke-width='1'%3E%3Cpath d='M60 8c14 12 22 26 22 40 0 16-10 26-22 26s-22-10-22-26c0-14 8-28 22-40z'/%3E%3Cpath d='M60 34c6 6 10 12 10 18s-4 11-10 11-10-5-10-11 4-12 10-18z'/%3E%3Cpath d='M8 60c12 14 26 22 40 22 16 0 26-10 26-22s-10-22-26-22C34 38 20 46 8 60z' opacity='.55'/%3E%3Cpath d='M112 60c-12 14-26 22-40 22-16 0-26-10-26-22s10-22 26-22c14 0 28 8 40 22z' opacity='.55'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 120px 120px;
+  mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, transparent 72%);
+}
+
+:root[data-theme='light'] .ambient-pattern {
+  opacity: 0.07;
+}
+
+.ambient-grain {
+  position: absolute;
+  inset: -50%;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain-shift 0.6s steps(3) infinite;
+}
+
+@keyframes grain-shift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  33% {
+    transform: translate3d(-2%, 1.5%, 0);
+  }
+  66% {
+    transform: translate3d(1.5%, -2%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.ambient-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% -10%, transparent 40%, var(--bg-deep) 100%);
+  opacity: 0.7;
+}
+
+/* ---- Utilitaires ---- */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--sheen), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ---- Respect des préférences de mouvement ---- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .ambient-grain,
+  .ambient-aurora {
+    animation: none !important;
+  }
+}

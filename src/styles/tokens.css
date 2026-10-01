@@ -1,0 +1,125 @@
+/* =========================================================
+   DiwaneKiram — jetons de design
+   Identité « Nuit Cyan » : noir profond, accents cyan/menthe.
+   ========================================================= */
+
+:root {
+  /* ---- Typographie ---- */
+  --font-ui: 'Space Grotesk', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-arabic: 'Amiri', 'Noto Naskh Arabic', 'Traditional Arabic', serif;
+  --font-arabic-alt: 'Noto Naskh Arabic', 'Amiri', serif;
+
+  --step--1: clamp(0.78rem, 0.76rem + 0.1vw, 0.84rem);
+  --step-0: clamp(0.92rem, 0.89rem + 0.14vw, 1rem);
+  --step-1: clamp(1.1rem, 1.03rem + 0.32vw, 1.3rem);
+  --step-2: clamp(1.35rem, 1.2rem + 0.7vw, 1.85rem);
+  --step-3: clamp(1.75rem, 1.4rem + 1.6vw, 2.7rem);
+  --step-4: clamp(2.3rem, 1.5rem + 3.4vw, 4.2rem);
+
+  /* ---- Rythme ---- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4.5rem;
+
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 30px;
+  --radius-pill: 999px;
+
+  /* ---- Mouvement ---- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 0.16s;
+  --dur-base: 0.28s;
+  --dur-slow: 0.55s;
+
+  /* ---- Mise en page ---- */
+  --sidebar-w: 15.5rem;
+  --topbar-h: 4.25rem;
+  --content-max: 78rem;
+  --content-wide: 96rem;
+
+  color-scheme: dark;
+}
+
+/* ---------------- Sombre (défaut) ---------------- */
+:root,
+:root[data-theme='dark'] {
+  --bg: #05070a;
+  --bg-deep: #030507;
+  --surface: rgba(15, 24, 34, 0.66);
+  --surface-solid: #0d141d;
+  --surface-2: rgba(22, 34, 46, 0.72);
+  --surface-hover: rgba(30, 46, 60, 0.8);
+
+  --border: rgba(125, 226, 255, 0.1);
+  --border-strong: rgba(125, 226, 255, 0.24);
+  --border-ink: rgba(255, 255, 255, 0.06);
+
+  --text: #e9f5f9;
+  --text-soft: #a2b9c6;
+  --text-dim: #66798a;
+
+  --cyan: #22d3ee;
+  --mint: #5eead4;
+  --amber: #f5c877;
+  --danger: #fb7185;
+
+  --accent-grad: linear-gradient(115deg, #22d3ee 0%, #5eead4 55%, #a7f3d0 100%);
+  --accent-grad-soft: linear-gradient(115deg, rgba(34, 211, 238, 0.16), rgba(94, 234, 212, 0.06));
+  --glow-cyan: 0 0 34px rgba(34, 211, 238, 0.2);
+  --glow-cyan-strong: 0 0 60px rgba(34, 211, 238, 0.32);
+  --shadow-card: 0 18px 50px -24px rgba(0, 0, 0, 0.9);
+  --shadow-lift: 0 30px 70px -30px rgba(0, 0, 0, 0.95);
+  --sheen: rgba(160, 240, 255, 0.14);
+
+  --particle: 165, 235, 250;
+  --particle-soft: 94, 234, 212;
+  --link: rgba(94, 234, 212, 0.22);
+  --grain-opacity: 0.05;
+}
+
+/* ---------------- Clair ---------------- */
+:root[data-theme='light'] {
+  --bg: #eef4f7;
+  --bg-deep: #e3ecf1;
+  --surface: rgba(255, 255, 255, 0.82);
+  --surface-solid: #ffffff;
+  --surface-2: rgba(255, 255, 255, 0.95);
+  --surface-hover: #ffffff;
+
+  --border: rgba(9, 68, 88, 0.12);
+  --border-strong: rgba(9, 68, 88, 0.26);
+  --border-ink: rgba(9, 68, 88, 0.06);
+
+  --text: #06222d;
+  --text-soft: #3d5f6e;
+  --text-dim: #67889a;
+
+  --cyan: #0e9bb8;
+  --mint: #0d9488;
+  --amber: #a86f16;
+  --danger: #c8394f;
+
+  --accent-grad: linear-gradient(115deg, #0e9bb8 0%, #0d9488 55%, #14b8a6 100%);
+  --accent-grad-soft: linear-gradient(115deg, rgba(14, 155, 184, 0.1), rgba(13, 148, 136, 0.05));
+  --glow-cyan: 0 0 30px rgba(14, 155, 184, 0.16);
+  --glow-cyan-strong: 0 0 50px rgba(13, 148, 136, 0.24);
+  --shadow-card: 0 16px 40px -26px rgba(6, 34, 45, 0.45);
+  --shadow-lift: 0 26px 60px -30px rgba(6, 34, 45, 0.5);
+  --sheen: rgba(14, 155, 184, 0.1);
+
+  --particle: 20, 110, 130;
+  --particle-soft: 13, 148, 136;
+  --link: rgba(13, 148, 136, 0.22);
+  --grain-opacity: 0.035;
+
+  color-scheme: light;
+}
