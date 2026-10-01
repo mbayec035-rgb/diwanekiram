@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, BookOpen, Layers, Search } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BookOpen, Search } from 'lucide-react'
 import { useAsync } from '../hooks/useAsync'
 import { loadCatalog } from '../services/library'
 import { Reveal, Stagger, StaggerItem } from '../components/motion/Reveal'
@@ -76,9 +76,6 @@ export function AuthorPage() {
             <div className="acard-stats">
               <Badge tone="cyan">
                 {works.length} œuvre{works.length > 1 ? 's' : ''}
-              </Badge>
-              <Badge tone="muted">
-                <Layers size={12} aria-hidden="true" /> {totalVerses} versets
               </Badge>
               <Badge tone={totalVerses > 0 && totalTranslated === totalVerses ? 'mint' : 'warn'}>
                 Traduction {totalVerses > 0 ? Math.round((totalTranslated / totalVerses) * 100) : 0} %

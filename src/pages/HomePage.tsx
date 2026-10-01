@@ -1,8 +1,18 @@
 /* Accueil : héros, reprise de lecture, auteurs, sélection, fonctionnalités. */
 
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowRight, Sparkles, WifiOff, Type, SlidersHorizontal, BookHeart, Quote } from 'lucide-react'
+import {
+  ArrowRight,
+  Sparkles,
+  WifiOff,
+  Type,
+  SlidersHorizontal,
+  BookHeart,
+  Quote,
+  BookOpen,
+} from 'lucide-react'
 import { useAsync } from '../hooks/useAsync'
 import { loadCatalog } from '../services/library'
 import { useLibrary, lastReadSlug } from '../store/useLibrary'
@@ -41,11 +51,21 @@ export function HomePage() {
 
   const featured = (catalog?.xassidas ?? []).slice(0, 8)
 
-  /* Les auteurs avec notice sont mis en avant sur l'accueil. */
+  /* Les auteurs avec notice sont mis en avant sur l'accueil,
+     avec un accès direct à quelques-unes de leurs œuvres. */
   const highlightedAuthors = (catalog?.authors ?? [])
     .filter((author) => author.bio && !author.anonymous)
-    .sort((a, b) => b.verseCount - a.verseCount)
+    .sort((a, b) => b.xassidaCount - a.xassidaCount || a.name.localeCompare(b.name, 'fr'))
     .slice(0, 4)
+
+  const worksByAuthor = useMemo(() => {
+    const index = new Map<string, typeof featured>()
+    for (const xassida of catalog?.xassidas ?? []) {
+      const list = index.get(xassida.authorId)
+      if (list) list.push(xassida)
+    }
+    return index
+  }, [catalog])
 
   const resumeXassida = catalog?.xassidas.find((item) => item.slug === resumeSlug)
   const resumeVerseId = resumeSlug ? progress[resumeSlug]?.verseId : undefined
@@ -138,8 +158,10 @@ export function HomePage() {
             </div>
           ) : (
             <Stagger className="grid grid--spotlight">
-              {highlightedAuthors.map((author) => (
-                <StaggerItem key={author.id}>
+              {highlightedAuthors.map((author) => {
+                const authorWorks = (worksByAuthor.get(author.id) ?? []).slice(0, 3)
+                return (
+                <StaggerItem key={author.id} className="spotlight-item">
                   <Link className="spotlight" to={`/auteurs/${author.slug}`}>
                     <span className="spotlight-quote" aria-hidden="true">
                       <Quote size={16} />
@@ -154,13 +176,29 @@ export function HomePage() {
                       ) : null}
                       <p className="spotlight-bio">{author.bio}</p>
                       <p className="spotlight-meta">
-                        {author.xassidaCount} œuvre{author.xassidaCount > 1 ? 's' : ''} ·{' '}
-                        {author.verseCount} versets
+                        {author.xassidaCount} œuvre{author.xassidaCount > 1 ? 's' : ''}
                       </p>
                     </div>
                   </Link>
+
+                  {authorWorks.length > 0 ? (
+                    <div className="spotlight-works">
+                      <span className="spotlight-works-label">Œuvres</span>
+                      <ul>
+                        {authorWorks.map((xassida) => (
+                          <li key={xassida.slug}>
+                            <Link to={`/xassida/${xassida.slug}`}>
+                              <BookOpen size={13} aria-hidden="true" />
+                              <span>{xassida.name}</span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
                 </StaggerItem>
-              ))}
+                )
+              })}
             </Stagger>
           )}
         </section>

@@ -339,6 +339,13 @@
     color: var(--text-dim);
   }
 
+  .tabbar-link span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .tabbar-link.active {
     color: var(--cyan);
   }
@@ -567,6 +574,14 @@
   flex: 0 1 16rem;
 }
 
+.authors-count {
+  flex: 0 0 auto;
+  padding-bottom: 0.65rem;
+  font-size: var(--step--1);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
 .acard-toggle {
   align-self: flex-start;
 }
@@ -645,19 +660,75 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
 }
 
+/* La fiche regroupe la notice cliquable et les accès directs aux œuvres. */
+.spotlight-item {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: var(--space-2);
+  height: 100%;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: border-color var(--dur-base), box-shadow var(--dur-base), transform var(--dur-base) var(--ease-out);
+}
+
+.spotlight-item:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-lift);
+  transform: translateY(-3px);
+}
+
 .spotlight {
   position: relative;
   display: grid;
   grid-template-columns: auto 1fr;
   grid-template-areas: 'avatar quote' 'body body';
   gap: var(--space-3);
-  height: 100%;
   padding: var(--space-5);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  box-shadow: var(--shadow-card);
-  transition: border-color var(--dur-base), box-shadow var(--dur-base), transform var(--dur-base) var(--ease-out);
+}
+
+.spotlight-works {
+  display: grid;
+  gap: var(--space-2);
+  padding: 0 var(--space-5) var(--space-4);
+}
+
+.spotlight-works-label {
+  font-size: var(--step--2);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.spotlight-works ul {
+  display: grid;
+  gap: 0.35rem;
+  list-style: none;
+}
+
+.spotlight-works a {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--step--1);
+  color: var(--text-soft);
+  background: var(--surface-2);
+  transition: color var(--dur-fast), background var(--dur-fast);
+}
+
+.spotlight-works a:hover {
+  color: var(--cyan);
+  background: var(--surface-3);
+}
+
+.spotlight-works a span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .spotlight:hover {
@@ -1563,12 +1634,6 @@
   font-size: var(--step--1);
   color: var(--text-dim);
   font-variant-numeric: tabular-nums;
-}
-
-.verse-translation--missing {
-  font-size: calc(var(--step-0) * var(--verse-translation-scale, 1));
-  color: var(--text-faint);
-  font-style: italic;
 }
 
 .reader-scroll {

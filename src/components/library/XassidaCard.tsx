@@ -2,7 +2,7 @@
 
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Heart, Layers, BookOpen } from 'lucide-react'
+import { Heart, Layers } from 'lucide-react'
 import type { Author, Xassida } from '../../types/domain'
 import { TiltCard } from '../motion/TiltCard'
 import { Badge, ProgressBar } from '../ui/Bits'
@@ -41,10 +41,7 @@ export function XassidaCard({ xassida, author, index = 0 }: XassidaCardProps) {
 
           <div className="xcard-meta">
             <span>
-              <Layers size={14} aria-hidden="true" /> {xassida.chapterCount} ch.
-            </span>
-            <span>
-              <BookOpen size={14} aria-hidden="true" /> {xassida.verseCount} vers
+              <Layers size={14} aria-hidden="true" /> {xassida.chapterCount} chapitres
             </span>
           </div>
 

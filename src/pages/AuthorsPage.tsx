@@ -9,17 +9,9 @@ import { normalize } from '../services/search'
 import { Reveal, Stagger, StaggerItem } from '../components/motion/Reveal'
 import { Avatar, Badge, ErrorState, Skeleton } from '../components/ui/Bits'
 
-type SortMode = 'nom' | 'versets'
-
-const SORTS: { value: SortMode; label: string }[] = [
-  { value: 'nom', label: 'Ordre alphabétique' },
-  { value: 'versets', label: 'Nombre de versets' },
-]
-
 export function AuthorsPage() {
   const { data: catalog, error, loading, reload } = useAsync(loadCatalog, [])
   const [query, setQuery] = useState('')
-  const [sort, setSort] = useState<SortMode>('nom')
 
   const authors = useMemo(() => {
     const needle = normalize(query).trim()
@@ -29,11 +21,8 @@ export function AuthorsPage() {
       return normalize(`${author.name} ${author.nameAr}`).includes(needle)
     })
 
-    return filtered.sort((a, b) => {
-      if (sort === 'versets') return b.verseCount - a.verseCount || a.name.localeCompare(b.name, 'fr')
-      return a.name.localeCompare(b.name, 'fr')
-    })
-  }, [catalog, query, sort])
+    return [...filtered].sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+  }, [catalog, query])
 
   return (
     <div className="page-stack">
@@ -60,21 +49,7 @@ export function AuthorsPage() {
               aria-label="Rechercher un auteur"
             />
           </label>
-
-          <label className="field field--select">
-            <span className="field-label">Trier</span>
-            <select
-              value={sort}
-              onChange={(event) => setSort(event.target.value as SortMode)}
-              aria-label="Trier les auteurs"
-            >
-              {SORTS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <span className="authors-count">{authors.length} auteurs</span>
         </div>
       </Reveal>
 
@@ -112,7 +87,6 @@ export function AuthorsPage() {
                         <Badge tone="cyan">
                           {author.xassidaCount} œuvre{author.xassidaCount > 1 ? 's' : ''}
                         </Badge>
-                        <Badge tone="muted">{author.verseCount} versets</Badge>
                       </span>
                     </span>
                     <ChevronRight className="acard-chevron" size={18} aria-hidden="true" />

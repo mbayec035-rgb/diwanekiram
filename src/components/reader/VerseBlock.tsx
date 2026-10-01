@@ -2,7 +2,7 @@
 
 import { memo } from 'react'
 import type { CSSProperties } from 'react'
-import { Languages, LanguagesIcon, Type as TypeIcon } from 'lucide-react'
+import { Languages, Type as TypeIcon } from 'lucide-react'
 import type { Verse } from '../../types/domain'
 
 interface VerseBlockProps {
@@ -33,9 +33,9 @@ function VerseBlock({
   font,
 }: VerseBlockProps) {
   /* La transcription et la traduction sont deux couches distinctes :
-     la transcription ne doit jamais servir de repli à la traduction. */
+     la transcription ne doit jamais servir de repli à la traduction.
+     Un verset sans traduction est simplement omis, sans marqueur. */
   const translated = translation?.trim() ? translation : ''
-  const missingTranslation = showTranslation && !translated
 
   return (
     <article
@@ -70,13 +70,6 @@ function VerseBlock({
       {translated && showTranslation ? (
         <p className="verse-translation">
           <Languages size={13} aria-hidden="true" /> {translated}
-        </p>
-      ) : null}
-
-      {missingTranslation ? (
-        <p className="verse-translation verse-translation--missing">
-          <LanguagesIcon size={13} aria-hidden="true" /> Traduction française à venir pour ce
-          verset.
         </p>
       ) : null}
     </article>
