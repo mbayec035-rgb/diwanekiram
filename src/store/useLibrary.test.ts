@@ -24,6 +24,20 @@ describe('useLibrary', () => {
     expect(state.history.map((entry) => entry.verseId)).toEqual(['3399'])
   })
 
+  it('mémorise le chapitre avec la position', () => {
+    useLibrary.getState().markRead('autre-burdu', '3398', 7)
+
+    const entry = useLibrary.getState().progress['autre-burdu']
+    expect(entry?.chapter).toBe(7)
+    expect(useLibrary.getState().history[0]?.chapter).toBe(7)
+  })
+
+  it('accepte une position sans chapitre', () => {
+    useLibrary.getState().markRead('autre-burdu', '3398')
+
+    expect(useLibrary.getState().progress['autre-burdu']?.chapter).toBeUndefined()
+  })
+
   it('ignore un marquage identique au dernier', () => {
     useLibrary.getState().markRead('autre-burdu', '3398')
     const first = useLibrary.getState().history

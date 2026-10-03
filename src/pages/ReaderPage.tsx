@@ -1,29 +1,18 @@
 /* Lecteur : navigation par chapitres, couches de texte, reprise de lecture. */
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import {
-  ChevronLeft,
-  ChevronRight,
-  GraduationCap,
-  Heart,
-  HelpCircle,
-  Languages,
-  Layers,
-  ScrollText,
-  Settings2,
-  Type,
-  X,
-} from 'lucide-react'
-import type { ReactNode, RefObject } from 'react'
+import { ChevronLeft, ChevronRight, Heart, Layers } from 'lucide-react'
+import type { RefObject } from 'react'
 import { useAsync } from '../hooks/useAsync'
 import { fetchTranslations, fetchVerses, loadCatalog } from '../services/library'
 import { useReadingProgress } from '../hooks/useReadingProgress'
 import { useLibrary } from '../store/useLibrary'
 import { useSettings } from '../store/useSettings'
-import type { LayerScale } from '../store/useSettings'
-import { SCALE_LIMITS } from '../store/useSettings'
 import { Badge, ErrorState, Skeleton } from '../components/ui/Bits'
+import { DisplayRail } from '../components/reader/DisplayRail'
+import { ChapterDrawer, ChapterRailButton } from '../components/reader/ChapterNav'
+import { ChapterFooterNav, ChapterStepper } from '../components/reader/ChapterStepper'
 import { MemoVerseBlock } from '../components/reader/VerseBlock'
 import type { Chapter, Verse } from '../types/domain'
 
@@ -51,22 +40,75 @@ export function ReaderPage() {
     [item?.translationsFile],
   )
 
-  const [chapterFilter, setChapterFilter] = useState<number | null>(null)
-  /* Le panneau reste ouvert tant que le slug ne change pas :
-     le comparer pendant le rendu évite un effet supplémentaire. */
-  const [displaySlug, setDisplaySlug] = useState<string | null>(null)
-  const displayOpen = displaySlug === slug
-  const displayRef = useRef<HTMLDivElement | null>(null)
-  const closeDisplay = () => setDisplaySlug(null)
+  const chapters = useMemo(() => document?.chapters ?? [], [document])
+
+  const progress = useLibrary((state) => state.progress[slug])
+
+  /* Le chapitre courant vit dans la page, pas dans l'URL : c'est un état de
+     navigation, et il est mémorisé par markRead comme la position de lecture.
+     `null` signifie « aucun chapitre choisi » — c'est alors la reprise qui
+     tranche, et elle n'a lieu qu'une fois le document arrivé. */
+  const [choisi, setChoisi] = useState<number | null>(null)
+  const [slugAffichage, setSlugAffichage] = useState(slug)
+  /* Un seul panneau à la fois : le sommaire et les réglages d'affichage
+     occupent la même zone du rail, ils ne peuvent pas se recouvrir. */
+  const [panneau, setPanneau] = useState<'sommaire' | 'affichage' | null>(null)
+  const sommaireOpen = panneau === 'sommaire'
+  const affichageOpen = panneau === 'affichage'
+  const setSommaireOpen = useCallback(
+    (open: boolean | ((previous: boolean) => boolean)) =>
+      setPanneau((previous) => {
+        const suivant = typeof open === 'function' ? open(previous === 'sommaire') : open
+        return suivant ? 'sommaire' : null
+      }),
+    [],
+  )
+  const setAffichageOpen = useCallback((open: boolean) => setPanneau(open ? 'affichage' : null), [])
+
+  const boutonSommaire = useRef<HTMLButtonElement | null>(null)
 
   const flat = useMemo<FlatVerse[]>(() => {
     if (!document) return []
     return document.chapters.flatMap((chapter) => chapter.verses.map((verse) => ({ verse, chapter })))
   }, [document])
 
+  /* Changement d'œuvre : le chapitre choisi et le panneau ouvert appartiennent
+     à l'œuvre précédente. On les oublie pendant le rendu, au moment exact où
+     le nouveau document s'affiche — sans effet, donc sans rendu intermédiaire
+     montrant le sommaire de l'ancienne œuvre. */
+  if (slugAffichage !== slug) {
+    setSlugAffichage(slug)
+    setChoisi(null)
+    setPanneau(null)
+  }
+
+  /* Reprise de lecture : le chapitre mémorisé, si l'œuvre en a toujours un
+     aussi — elle a pu être complétée entre-temps. Sinon le premier. */
+  const memorise = useMemo(() => {
+    const n = progress?.chapter
+    if (n === undefined) return null
+    return chapters.some((entry) => entry.n === n) ? n : null
+  }, [progress?.chapter, chapters])
+
+  /* Un verset demandé par l'URL l'emporte sur la reprise, et peut être dans un
+     autre chapitre que le chapitre mémorisé : on l'ouvre d'abord, puis le
+     défilement rejoint le verset. Dérivé pendant le rendu — c'est une position
+     de départ, pas un changement de chapitre demandé par l'utilisateur. */
+  const chapterDemande = useMemo(() => {
+    if (!requestedVerse) return null
+    return flat.find((entry) => entry.verse.id === requestedVerse)?.chapter.n ?? null
+  }, [requestedVerse, flat])
+
+  const chapter = choisi ?? chapterDemande ?? memorise ?? 1
+
+  const currentChapter = useMemo(
+    () => chapters.find((entry) => entry.n === chapter) ?? chapters[0],
+    [chapters, chapter],
+  )
+
   const visible = useMemo(
-    () => (chapterFilter ? flat.filter((entry) => entry.chapter.n === chapterFilter) : flat),
-    [flat, chapterFilter],
+    () => (currentChapter ? flat.filter((entry) => entry.chapter.n === currentChapter.n) : flat),
+    [flat, currentChapter],
   )
 
   const ids = useMemo(() => visible.map((entry) => entry.verse.id), [visible])
@@ -79,40 +121,46 @@ export function ReaderPage() {
 
   const settings = useSettings()
 
+  /* Le changement de chapitre est demandé par l'utilisateur ou par la reprise,
+     jamais par le défilement : on replace le début du chapitre choisi. */
+  /* Le changement de chapitre est demandé par l'utilisateur ou par la reprise,
+     jamais par le défilement : on replace le début du chapitre choisi. */
+  useEffect(() => {
+    if (flat.length === 0) return
+    const premier = flat.find((entry) => entry.chapter.n === chapter)?.verse.id
+    if (!premier) return
+    scrollTo(premier)
+  }, [chapter, flat, scrollTo])
+
+  /* Le chapitre affiché est à l'écran : on rejoint ensuite le verset demandé
+     par l'URL, qui prime sur le début du chapitre. */
   useEffect(() => {
     if (!requestedVerse || flat.length === 0) return
-    if (flat.some((entry) => entry.verse.id === requestedVerse)) scrollTo(requestedVerse)
-  }, [requestedVerse, slug, flat, scrollTo])
-
-  useEffect(() => {
-    if (!displayOpen) return
-
-    const onPointerDown = (event: MouseEvent) => {
-      const target = event.target as Node | null
-      if (target && displayRef.current?.contains(target)) return
-      setDisplaySlug(null)
-    }
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setDisplaySlug(null)
-    }
-
-    /* `document` est masqué par le document des versets : on passe par globalThis. */
-    globalThis.document.addEventListener('mousedown', onPointerDown)
-    globalThis.document.addEventListener('keydown', onKeyDown)
-    return () => {
-      globalThis.document.removeEventListener('mousedown', onPointerDown)
-      globalThis.document.removeEventListener('keydown', onKeyDown)
-    }
-  }, [displayOpen])
+    const cible = flat.find((entry) => entry.verse.id === requestedVerse)
+    if (!cible || cible.chapter.n !== chapter) return
+    scrollTo(requestedVerse)
+  }, [requestedVerse, flat, chapter, scrollTo])
 
   useEffect(() => {
     if (!activeId || flat.length === 0) return
-    const timer = window.setTimeout(() => markRead(slug, activeId), 900)
+    const timer = window.setTimeout(() => markRead(slug, activeId, chapter), 900)
     return () => window.clearTimeout(timer)
-  }, [activeId, slug, markRead, flat.length])
+  }, [activeId, slug, chapter, markRead, flat.length])
+
+  /* Aller au chapitre voisin sans passer par le sommaire. */
+  const changeChapter = useCallback(
+    (n: number) => {
+      if (n < 1 || n > chapters.length) return
+      setChoisi(n)
+    },
+    [chapters.length],
+  )
 
   useEffect(() => {
+    /* Le sommaire a le focus pendant qu'il est ouvert : j et k doivent y
+       rester des frappes de liste, pas des changements de verset. */
+    if (sommaireOpen) return
+
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
       if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return
@@ -131,7 +179,7 @@ export function ReaderPage() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [ids, activeId, scrollTo])
+  }, [ids, activeId, scrollTo, sommaireOpen])
 
   if (catalogError) return <ErrorState message={catalogError.message} onRetry={reload} />
 
@@ -148,8 +196,6 @@ export function ReaderPage() {
   }
 
   const currentIndex = ids.indexOf(activeId ?? '')
-  const chapters = document?.chapters ?? []
-  const currentChapter = currentIndex >= 0 ? visible[currentIndex].chapter.n : null
   const translatedPercent = Math.round(xassida.translatedRatio * 100)
 
   /* Le mètre, la rive et le thème n'existent que chez les sources qui les
@@ -163,37 +209,6 @@ export function ReaderPage() {
 
   return (
     <div className="reader">
-      <aside className="reader-toc" aria-label="Chapitres">
-        <p className="reader-toc-title">Chapitres</p>
-        <ul>
-          <li>
-            <button
-              type="button"
-              className={`toc-item${chapterFilter === null ? ' is-active' : ''}`}
-              onClick={() => setChapterFilter(null)}
-            >
-              Tout ({xassida.verseCount})
-            </button>
-          </li>
-          {chapters.map((chapter) => (
-            <li key={chapter.n}>
-              <button
-                type="button"
-                className={`toc-item${chapterFilter === chapter.n ? ' is-active' : ''}`}
-                onClick={() => {
-                  setChapterFilter(chapters.length > 1 ? chapter.n : null)
-                  const first = chapter.verses[0]
-                  if (first) window.setTimeout(() => scrollTo(first.id), 60)
-                }}
-              >
-                {chapters.length > 1 ? `Chapitre ${chapter.n}` : 'Texte'}
-                <span className="chip-count">{chapter.verses.length}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </aside>
-
       <div className="reader-main">
         <header className="reader-head">
           <div className="reader-head-main">
@@ -240,130 +255,33 @@ export function ReaderPage() {
           </button>
         </header>
 
-        <div className="reader-display" ref={displayRef}>
-          <div className="reader-toolbar" role="group" aria-label="Options de lecture">
-          <div className="toolbar-group toolbar-group--display">
-            <LayerToggle
-              active={settings.showArabic}
-              onClick={() => settings.toggleLayer('showArabic')}
-              icon={<Type size={15} />}
-              label="Arabe"
-            />
-            <LayerToggle
-              active={settings.showTranscription}
-              onClick={() => settings.toggleLayer('showTranscription')}
-              icon={<ScrollText size={15} />}
-              label="Transcription"
-            />
-            <LayerToggle
-              active={settings.showTranslation}
-              onClick={() => settings.toggleLayer('showTranslation')}
-              icon={<Languages size={15} />}
-              label="Traduction"
-            />
-
-            <button
-              type="button"
-              className={`button button--ghost button--sm display-toggle${displayOpen ? ' is-active' : ''}`}
-              onClick={() => setDisplaySlug(displayOpen ? null : slug)}
-              aria-expanded={displayOpen}
-              aria-haspopup="dialog"
-            >
-              <Settings2 size={15} />
-              <span>Affichage</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="toolbar-group toolbar-group--practice">
-          <Link
-            className="button button--ghost button--sm"
-            to={`/apprentissage/${slug}`}
-            title="Apprendre cette xassida vers par vers"
-          >
-            <GraduationCap size={15} />
-            <span>Apprendre</span>
-          </Link>
-          <Link
-            className="button button--ghost button--sm"
-            to={`/quiz?xassida=${slug}`}
-            title="Quiz sur cette xassida"
-          >
-            <HelpCircle size={15} />
-            <span>Quiz</span>
-          </Link>
-        </div>
-
-        {displayOpen ? (
-            <div
-              className="display-panel"
-              role="dialog"
-              aria-label="Réglages d’affichage"
-            >
-              <div className="display-panel-head">
-                <p className="display-panel-title">
-                  <Settings2 size={15} aria-hidden="true" /> Réglages d&rsquo;affichage
-                </p>
-                <button
-                  type="button"
-                  className="icon-button icon-button--ghost"
-                  onClick={closeDisplay}
-                  aria-label="Fermer les réglages d’affichage"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-
-              <div className="display-panel-rows">
-                <ScaleSlider
-                  icon={<Type size={15} />}
-                  label="Texte arabe"
-                  layer="arabic"
-                  value={settings.arabicScale}
-                  onChange={(value) => settings.setLayerScale('arabic', value)}
-                />
-                <ScaleSlider
-                  icon={<ScrollText size={15} />}
-                  label="Transcription"
-                  layer="transcription"
-                  value={settings.transcriptionScale}
-                  onChange={(value) => settings.setLayerScale('transcription', value)}
-                  disabled={!settings.showTranscription}
-                />
-                <ScaleSlider
-                  icon={<Languages size={15} />}
-                  label="Traduction"
-                  layer="translation"
-                  value={settings.translationScale}
-                  onChange={(value) => settings.setLayerScale('translation', value)}
-                  disabled={!settings.showTranslation}
-                />
-              </div>
-
-              <div className="display-panel-toggles">
-                {(
-                  [
-                    ['showArabic', 'Arabe'],
-                    ['showTranscription', 'Transcription'],
-                    ['showTranslation', 'Traduction'],
-                  ] as const
-                ).map(([layer, label]) => (
-                  <button
-                    key={layer}
-                    type="button"
-                    className={`chip chip--button${settings[layer] ? ' is-active' : ''}`}
-                    onClick={() => settings.toggleLayer(layer)}
-                    aria-pressed={settings[layer]}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-        ) : null}
-        </div>
+        <DisplayRail slug={slug} ouvert={affichageOpen} onOpenChange={setAffichageOpen}>
+          <ChapterRailButton
+            ref={boutonSommaire}
+            total={chapters.length}
+            open={sommaireOpen}
+            onToggle={() => setSommaireOpen((open) => !open)}
+          />
+          <ChapterDrawer
+            chapters={chapters}
+            chapter={chapter}
+            open={sommaireOpen}
+            onOpenChange={setSommaireOpen}
+            onSelect={changeChapter}
+            triggerRef={boutonSommaire}
+          />
+        </DisplayRail>
 
         {versesError ? <ErrorState message={versesError.message} /> : null}
+
+        <ChapterStepper
+          chapter={chapter}
+          total={chapters.length}
+          open={sommaireOpen}
+          onPrev={() => changeChapter(chapter - 1)}
+          onNext={() => changeChapter(chapter + 1)}
+          onOpenSummary={() => setSommaireOpen(true)}
+        />
 
         <div className="reader-scroll" ref={containerRef as RefObject<HTMLDivElement>}>
           {!document ? (
@@ -394,6 +312,13 @@ export function ReaderPage() {
           )}
         </div>
 
+        <ChapterFooterNav
+          chapter={chapter}
+          total={chapters.length}
+          onPrev={() => changeChapter(chapter - 1)}
+          onNext={() => changeChapter(chapter + 1)}
+        />
+
         <footer className="reader-foot">
           <button
             type="button"
@@ -409,7 +334,6 @@ export function ReaderPage() {
 
           <span className="reader-position">
             {currentIndex >= 0 ? `${currentIndex + 1} / ${ids.length}` : `${ids.length} versets`}
-            {currentChapter && chapters.length > 1 ? ` · chapitre ${currentChapter}` : ''}
           </span>
 
           <button
@@ -430,69 +354,6 @@ export function ReaderPage() {
           flèches pour parcourir les versets.
         </p>
       </div>
-    </div>
-  )
-}
-
-function LayerToggle({
-  active,
-  onClick,
-  icon,
-  label,
-}: {
-  active: boolean
-  onClick: () => void
-  icon: ReactNode
-  label: string
-}) {
-  return (
-    <button
-      type="button"
-      className={`chip chip--button${active ? ' is-active' : ''}`}
-      onClick={onClick}
-      aria-pressed={active}
-    >
-      {icon}
-      {label}
-    </button>
-  )
-}
-
-/** Curseur de taille « façon volume » pour une couche de lecture. */
-function ScaleSlider({
-  icon,
-  label,
-  layer,
-  value,
-  onChange,
-  disabled = false,
-}: {
-  icon: ReactNode
-  label: string
-  layer: LayerScale
-  value: number
-  onChange: (value: number) => void
-  disabled?: boolean
-}) {
-  const [min, max] = SCALE_LIMITS[layer]
-
-  return (
-    <div className={`scale-slider${disabled ? ' is-disabled' : ''}`}>
-      <span className="scale-slider-label">
-        {icon}
-        {label}
-      </span>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={0.05}
-        value={value}
-        disabled={disabled}
-        onChange={(event) => onChange(Number(event.target.value))}
-        aria-label={`Taille : ${label.toLowerCase()}`}
-      />
-      <output className="scale-slider-value">{Math.round(value * 100)} %</output>
     </div>
   )
 }

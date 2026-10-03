@@ -1,6 +1,6 @@
 /* Conteneurs de mise en page sans animation. */
 
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 
 interface RevealProps {
   children: ReactNode
@@ -29,6 +29,18 @@ export function Stagger({ children, className, as = 'div' }: StaggerProps) {
   return <div className={className}>{children}</div>
 }
 
-export function StaggerItem({ children, className }: { children: ReactNode; className?: string }) {
-  return <li className={className}>{children}</li>
+export function StaggerItem({
+  children,
+  className,
+  style,
+}: {
+  children: ReactNode
+  className?: string
+  style?: CSSProperties
+}) {
+  return (
+    <li className={className} style={style}>
+      {children}
+    </li>
+  )
 }

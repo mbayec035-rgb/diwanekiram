@@ -5,6 +5,11 @@ import { persist } from 'zustand/middleware'
 
 export interface ProgressEntry {
   verseId: string
+  /* Le chapitre n'est pas toujours connu : les œuvres figées gardent les
+     identifiants numériques de la source, d'où un verset muet sur son
+     chapitre. Le champ reste facultatif, et absent des entrées déjà
+     enregistrées. */
+  chapter?: number
   updatedAt: number
 }
 
@@ -18,7 +23,7 @@ interface LibraryState {
   history: HistoryEntry[]
   toggleFavorite: (slug: string) => void
   isFavorite: (slug: string) => boolean
-  markRead: (slug: string, verseId: string) => void
+  markRead: (slug: string, verseId: string, chapter?: number) => void
   clearHistory: () => void
   clearFavorites: () => void
   clearProgress: () => void
@@ -43,16 +48,21 @@ export const useLibrary = create<LibraryState>()(
 
       isFavorite: (slug) => get().favorites.includes(slug),
 
-      markRead: (slug, verseId) =>
+      markRead: (slug, verseId, chapter) =>
         set((state) => {
           const now = Date.now()
           const last = state.history[0]
-          if (last && last.slug === slug && last.verseId === verseId) return state
+          if (last && last.slug === slug && last.verseId === verseId && last.chapter === chapter) {
+            return state
+          }
 
           return {
-            progress: { ...state.progress, [slug]: { verseId, updatedAt: now } },
+            progress: {
+              ...state.progress,
+              [slug]: { verseId, chapter, updatedAt: now },
+            },
             history: [
-              { slug, verseId, updatedAt: now },
+              { slug, verseId, chapter, updatedAt: now },
               ...state.history.filter((item) => item.slug !== slug),
             ].slice(0, HISTORY_LIMIT),
           }

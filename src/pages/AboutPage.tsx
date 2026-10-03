@@ -91,9 +91,11 @@ export function AboutPage() {
           <h2>À propos du texte</h2>
           <p className="muted">
             L’arabe est présenté avec ses voyelles (tashkīl) et la ponctuation du texte de référence. La
-            transcription latine accompagne chaque verset pour faciliter la lecture des non-arabophones, et
-            la traduction française couvre une partie du corpus : les versets encore sans traduction sont
-            clairement signalés plutôt que remplacés par du vide.
+            transcription latine accompagne chaque verset pour faciliter la lecture des
+            non-arabophones ; là où la règle ne sait pas lire un mot, c’est une relecture à la main qui
+            l’écrit, plutôt qu’une approximation, et la traduction française couvre une partie du
+            corpus : les versets encore sans traduction sont clairement signalés plutôt que remplacés
+            par du vide.
           </p>
           {totals ? (
             <p className="muted small">

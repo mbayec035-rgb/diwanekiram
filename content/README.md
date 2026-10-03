@@ -20,6 +20,8 @@ content/
   texte/<slug>.txt           variante : le texte brut, un verset par ligne
   texte/<slug>.json          variante : la fiche qui accompagne <slug>.txt
   traductions/<slug>.fr.json variante : traductions à part (optionnel)
+  phonetique/<slug>.json     transcription phonétique latine de cette œuvre
+  source/residu.json         figeage de ce que la source en ligne ne sert plus
 ```
 
 **Le nom du fichier fait foi.** `<slug>` devient l'adresse de la page
@@ -184,6 +186,91 @@ Pour ajouter une transcription latine à un texte brut, utilisez la forme JSON :
 
 ---
 
+## 5. Transcription phonétique — `content/phonetique/<slug>.json`
+
+Prononciation latine de chaque verset, pour lire un vers dont on ne connaît pas
+l'arabe. Un fichier par œuvre, indexé par **identifiant de verset publié** :
+
+```json
+{
+  "slug": "elhadji-malick-sy-abada-buruqun",
+  "convention": "v1",
+  "verses": {
+    "2103": "smi llāhi r-raḥmāni r-raḥīmi",
+    "2104": "ʾabadā burūqu taḥta junḥi ẓalāmi"
+  }
+}
+```
+
+La clef est l'identifiant de `public/data/verses/<slug>.json`, pas le numéro du
+verset : `2103` et non `1`.
+
+**Le publié passe avant la règle.** 2 420 versets du corpus avaient déjà une
+transcription ; elle reste celle que le lecteur voit. `content/phonetique/` ne
+remplit que les trous, et `npm run data:transcrire` refuse d'écrire là où le
+corpus a déjà répondu : il compte les divergences et les propose, sans les
+appliquer. Harmoniser le corpus entier sur cette convention reste un choix à
+faire à la main, pas un effet de bord du build.
+
+### La convention
+
+| Notation | Prononce | Exemple |
+|---|---|---|
+| `ā ī ū` | voyelles longues | `r-raḥmāni`, `ṣallā` |
+| `ʿ ḥ ṣ ṭ ẓ ḍ kh gh sh dh th` | lettres accentuées | `l-ʿālamīna`, `al-ḍiyāmu` |
+| `l-` `r-` `s-` `ll` | l'article, assimilation comprise | `r-raḥmāni`, `llāhi` |
+| `bil-` `lil-` `wallāhi` | proclitiques collés | `bil-ḥabībi` |
+| `ʾ` | hamza | `ʾabadā`, `l-ʾakwāni` |
+| `wajhu` | waw et fa ne sont pas des mots | `وَجْهُ مَيَّةَ` → `wajhu mayyata` |
+
+Le tanwīn ne se prononce pas (`بُرُوقٌ` → `burūqu`), la shadda se double
+(`رَبِّ` → `rabbi`), la tāʾ marbūṭa finale sans voyelle se tait
+(`رَحْمَة` → `raḥma`).
+
+### Générer
+
+```bash
+npm run data:transcrire                            # rapport, n'écrit rien
+npm run data:transcrire -- --œuvre <slug>         # une œuvre, texte à texte
+npm run data:transcrire -- --écrire                # dépose les sidecars
+npm run data:transcrire -- --force                 # réécrit l'existant
+npm run data:transcrire -- --rapport <fichier>     # liste de relecture
+```
+
+La règle est entièrement locale et déterministe (`scripts/lib/phonetique.mjs` :
+aucun réseau, aucune dépendance). Deux garde-fous :
+
+* **sans `--force`, une clef déjà présente n'est jamais réécrite** — une relecture
+  humaine ne se perd pas ;
+* **un verset que la règle ne sait pas rendre n'est pas transcrit du tout.** Il
+  reste absent du sidecar ; le build garde alors pour ce verset la traduction
+  déjà publiée, et le lecteur n'affiche une ligne de prononciation que si elle
+  existe. Mieux vaut un vide qu'une approximation fausse.
+
+### Relecture
+
+Trois marques bloquent la transcription, trois autres demandent un œil :
+
+| Marque | Effet | Sens |
+|---|---|---|
+| `sans-harakat` | bloque | voyelle non écrite, lecture indécidable (`قَد` : qadd ou qad) |
+| `wolof` | bloque | digraphes wolofs translittérés (`ݧ`), aucune lecture arabe ne les restitue |
+| `inconnu` | bloque | caractère non identifié |
+| `harakat-déduite` | à relire | la mater nue donnait la voyelle (`فِى` → `fī`) |
+| `ornement` | à relire | guillemets du Coran autour du verset |
+| `atypique` | à relire | hamza sans voyelle, cas inattendu |
+
+`npm run data:transcrire -- --rapport content/phonetique-relecture.json` dépose la
+liste de travail : `refused` d'abord, `toReview` ensuite. Une relecture se
+corrige à la main dans `content/phonetique/<slug>.json`, jamais dans
+`public/data/` qui est généré.
+
+État au dernier passage : **10 782 versets sur 10 860** transcrits (99 %),
+78 refusés, 916 à relire. Ce décompte bouge à chaque fusion d'œuvre : c'est le
+corpus entier qui est passé au crible, pas une œuvre à la fois.
+
+---
+
 ## Construire
 
 ```bash
@@ -204,8 +291,91 @@ Sans anomalie, il réécrit `public/data/` et affiche le résumé.
 
 Deux points à connaître :
 
-* le build **relit la source en ligne** à chaque exécution. Si xassida.sn est
-  injoignable, le build échoue plutôt que d'effacer le catalogue : les textes
-  déposés dans `content/` restent intacts dans tous les cas ;
+* le build est **hors ligne**. Il lit `content/source/residu.json`, pas le site ;
 * les fichiers de `public/data/` sont générés. Pour corriger un texte, on modifie
   le fichier dans `content/`, jamais le JSON généré.
+
+## La source figée — `content/source/residu.json`
+
+`npm run data:build` a besoin d'une base : les œuvres, leurs chapitres, leurs
+versets, les auteurs et les traductions françaises. Cette base est
+`content/source/residu.json`.
+
+Elle existe parce que la source en ligne a régressé. Le site est passé de
+`xassida.sn` à `markazulfuhum.app`, puis de Next.js à une API. Cette API n'expose
+plus que **241 œuvres / 8 867 lignes**, alors que le corpus en compte **276 /
+10 860**. Trente-cinq œuvres n'existent plus que dans `public/data/`. Un build qui
+relirait l'API les **supprimerait**.
+
+`content/source/residu.json` fige donc le minimum vital : le texte des œuvres que
+`content/oeuvres/` ne dépose pas, les traductions françaises qu'aucun dépôt ne
+porte déjà, les auteurs que `content/auteurs/` ne dépose pas, et les pistes audio.
+Le texte des 241 œuvres déposées n'est pas dupliqué : il reste la propriété de
+`content/oeuvres/`. Il en va de même d'une traduction déposée dans
+`content/traductions/` ou `content/oeuvres/<slug>.fr.json` : la figer une seconde
+fois lui donnerait deux sources de vérité.
+
+```bash
+node scripts/snapshot-source.mjs            # regénère le figeage depuis public/data/
+node scripts/snapshot-source.mjs --check    # vérifie qu'il est à jour (sort en 1 sinon)
+```
+
+Ne pas éditer ce fichier à la main. Après un build, `--check` doit dire « à jour ».
+
+## Deux recensions de la même œuvre
+
+`Khilāṣu Dh-dhahabi Fī Sīrati Khayri L-ʿarabi` est arrivée deux fois dans le
+corpus, du même auteur (Elhadji Malick SY, id 6) et sous le même titre arabe :
+d'un côté l'œuvre déposée par `markazulfuhum.app`, tronquée au **chapitre 12**
+sur 427 versets alors que l'édition imprimée en compte environ 30 ; de l'autre,
+`xassida.sn`, complète sur **30 chapitres / 1 056 versets** et traduite en
+français. Ce n'est pas un défaut d'extraction de l'API — elle déclare
+`chapters_count: 12` — mais deux tirages du même poème, avec des variantes
+lexicales et orthographiques d'un tirage à l'autre.
+
+Les deux entrées ont été fusionnées le 3 octobre 2026 dans celle qui avait
+l'identifiant lisible et les repères poétiques (Al-Basīt / Mīmiyya /
+Muhammadiyyāt) :
+
+* texte, transcription et traduction des 30 chapitres repris de la recension
+  complète, deposited dans `content/oeuvres/khilasu-dh-dhahabi-fi-sirati-khayri-l-arabi.json`
+  et `….fr.json` ;
+* la coupe des deux hémistiches, absente du tirage complet, reportée de l'ancien
+  fichier pour les 427 versets qui en avaient une. Les 629 versets des chapitres
+  12 (v81 à v116) et 13 à 30 n'ont aucun repère antérieur : ils s'affichent sur
+  une ligne ;
+* l'ancienne entrée et son sidecar supprimés, ses traductions réindexées sur les
+  identifiants de l'œuvre conservée.
+
+Le compteur de l'auteur est passé de 86 œuvres / 5 329 versets à 85 œuvres /
+4 902 versets : les 427 versets de la recension courte sont remplacés, pas
+ajoutés.
+
+La fusion est reproductible : `node scripts/merge-khilass-zahab.mjs` refait le
+travail et s'arrête si elle a déjà été appliquée, `--appliquer` écrit. Le
+script compare les textes aux lettres près et non aux mots : la recension
+complète détache la particule (`وَ الْقِدَمِ`) là où l'autre l'attache
+(`وَالْقِدَمِ`), ce qui décale tout comptage de mots. Une coupe d'hémistiche qui
+ne retrouve pas les deux moitiés est refusée plutôt que devinée.
+
+Pour compléter une œuvre depuis une édition imprimée :
+
+```bash
+node scripts/import-chapters.mjs <slug> <source.json> --dry-run
+node scripts/import-chapters.mjs <slug> <source.json>
+```
+
+Le fichier source peut être `{"chapters": [...]}` ou un tableau de chapitres.
+Un verset porte `ar` (obligatoire), et facultativement `sadr`, `adj`, `tr` et
+`fr`. `license`, `source`, `providedBy` et `edition` sont repris à la racine pour
+attester la provenance.
+
+Le script **n'écrit rien** si un contrôle échoue : numérotation de chapitre
+continue, numérotation de verset redémarrant à 1, aucun chapitre déjà présent,
+aucun verset vide ou sans caractère arabe, aucun identifiant de verset réutilisé.
+Ce dernier point est le plus important : les transcriptions phonétiques sont
+indexées sur `<slug>-c<chapitre>-v<verset>`, et un identifiant réutilisé
+attacherait une transcription au mauvais verset.
+
+Après l'import : `npm run data:build`, puis `npm run data:transcrire` pour les
+nouveaux versets.

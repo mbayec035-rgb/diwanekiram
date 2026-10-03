@@ -12,6 +12,7 @@
     "test": "vitest run",
     "format": "prettier --write .",
     "data:source": "node scripts/extract-content.mjs",
+    "data:transcrire": "node scripts/transcrire.mjs",
     "data:build": "node scripts/build-library.mjs",
     "authors:pictures": "node scripts/fetch-author-pictures.mjs",
     "icons": "node scripts/generate-icons.mjs"

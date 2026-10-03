@@ -1,17 +1,21 @@
 /* Auteurs : fiches cliquables vers la page dédiée de chaque auteur. */
 
+import type { CSSProperties } from 'react'
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowRight, ChevronRight, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { useAsync } from '../hooks/useAsync'
+import { useViewMode } from '../hooks/useViewMode'
 import { loadCatalog } from '../services/library'
 import { normalize } from '../services/search'
 import { Reveal, Stagger, StaggerItem } from '../components/motion/Reveal'
-import { Avatar, Badge, ErrorState, Skeleton } from '../components/ui/Bits'
+import { ErrorState, Skeleton } from '../components/ui/Bits'
+import { ViewToggleButton } from '../components/ui/ViewToggleButton'
+import { AuthorCard } from '../components/library/AuthorCard'
 
 export function AuthorsPage() {
   const { data: catalog, error, loading, reload } = useAsync(loadCatalog, [])
   const [query, setQuery] = useState('')
+  const { view, toggle } = useViewMode('dk.vue.auteurs')
 
   const authors = useMemo(() => {
     const needle = normalize(query).trim()
@@ -50,63 +54,25 @@ export function AuthorsPage() {
             />
           </label>
           <span className="authors-count">{authors.length} auteurs</span>
+          <ViewToggleButton view={view} onToggle={toggle} />
         </div>
       </Reveal>
 
       {error ? <ErrorState message={error.message} onRetry={reload} /> : null}
 
       {loading ? (
-        <div className="grid grid--authors">
+        <div className={`view-stack ${view}`}>
           {Array.from({ length: 6 }, (_, index) => (
-            <Skeleton key={index} height={230} radius={20} />
+            <Skeleton key={index} height={view === 'list' ? 74 : 230} radius={20} />
           ))}
         </div>
       ) : authors.length === 0 ? (
         <p className="muted">Aucun auteur ne correspond à cette recherche.</p>
       ) : (
-        <Stagger className="grid grid--authors">
-          {authors.map((author) => (
-            <StaggerItem key={author.id}>
-              <article className="acard">
-                <Link className="acard-link" to={`/auteurs/${author.slug}`}>
-                  <span className="acard-head">
-                    <Avatar
-                      name={author.name}
-                      picture={author.picture}
-                      seed={author.id}
-                      size={56}
-                    />
-                    <span className="acard-identity">
-                      <span className="acard-name">{author.name}</span>
-                      {author.nameAr ? (
-                        <span className="acard-name-ar">{author.nameAr}</span>
-                      ) : null}
-                      <span className="acard-stats">
-                        <Badge tone="muted">{author.tarihaLabel}</Badge>
-                        {author.anonymous ? <Badge tone="muted">Auteur inconnu</Badge> : null}
-                        <Badge tone="cyan">
-                          {author.xassidaCount} œuvre{author.xassidaCount > 1 ? 's' : ''}
-                        </Badge>
-                      </span>
-                    </span>
-                    <ChevronRight className="acard-chevron" size={18} aria-hidden="true" />
-                  </span>
-
-                  <span className="acard-bio">
-                    {author.bio ? (
-                      author.bio
-                    ) : (
-                      'Aucune notice n’est publiée pour cette entrée : les textes restent '
-                        + 'consultables, mais leur attribution est incertaine.'
-                    )}
-                  </span>
-
-                  <span className="acard-cta">
-                    Voir la fiche de l&rsquo;auteur
-                    <ArrowRight size={15} aria-hidden="true" />
-                  </span>
-                </Link>
-              </article>
+        <Stagger key={view} as="ul" className={`view-stack ${view}`}>
+          {authors.map((author, index) => (
+            <StaggerItem key={author.id} style={{ '--i': index } as CSSProperties}>
+              <AuthorCard author={author} view={view} />
             </StaggerItem>
           ))}
         </Stagger>

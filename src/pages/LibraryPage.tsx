@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Search, X, SlidersHorizontal, Users } from 'lucide-react'
 import { useAsync } from '../hooks/useAsync'
+import { useViewMode } from '../hooks/useViewMode'
 import { loadCatalog } from '../services/library'
 import {
   LENGTH_OPTIONS,
@@ -15,6 +16,7 @@ import {
 import { Reveal } from '../components/motion/Reveal'
 import { XassidaCard } from '../components/library/XassidaCard'
 import { EmptyState, ErrorState, Skeleton } from '../components/ui/Bits'
+import { ViewToggleButton } from '../components/ui/ViewToggleButton'
 import type { Author } from '../types/domain'
 
 export function LibraryPage() {
@@ -24,6 +26,7 @@ export function LibraryPage() {
   const length = (params.get('longueur') as LengthFilter | null) ?? 'all'
   const sort = (params.get('tri') as SortKey | null) ?? 'az'
   const [showFilters, setShowFilters] = useState(false)
+  const { view, toggle } = useViewMode('dk.vue.oeuvres')
 
   const { data: catalog, error, loading, reload } = useAsync(loadCatalog, [])
 
@@ -108,6 +111,8 @@ export function LibraryPage() {
           <SlidersHorizontal size={16} /> Filtres
         </button>
 
+        <ViewToggleButton view={view} onToggle={toggle} />
+
         <label className="toolbar-sort toolbar-author">
           <span>Auteur</span>
           <select
@@ -188,9 +193,9 @@ export function LibraryPage() {
       {error ? <ErrorState message={error.message} onRetry={reload} /> : null}
 
       {loading ? (
-        <div className="grid grid--cards">
+        <div className={`view-stack ${view}`}>
           {Array.from({ length: 9 }, (_, index) => (
-            <Skeleton key={index} height={220} radius={18} />
+            <Skeleton key={index} height={view === 'list' ? 84 : 220} radius={18} />
           ))}
         </div>
       ) : results.length === 0 && !error ? (
@@ -201,16 +206,18 @@ export function LibraryPage() {
           action={hasFilters ? { to: '/bibliotheque', label: 'Réinitialiser' } : null}
         />
       ) : (
-        <div className="grid grid--cards">
+        <ul key={view} className={`view-stack ${view}`}>
           {results.map((xassida, index) => (
             <XassidaCard
               key={xassida.slug}
               xassida={xassida}
               index={index}
               author={authorsById.get(xassida.authorId)}
+              view={view}
+              as="li"
             />
           ))}
-        </div>
+        </ul>
       )}
     </div>
   )

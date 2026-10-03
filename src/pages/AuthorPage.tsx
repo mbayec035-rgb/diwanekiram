@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, BookOpen, Search } from 'lucide-react'
+import { ArrowLeft, BookOpen, Search } from 'lucide-react'
 import { useAsync } from '../hooks/useAsync'
 import { loadCatalog } from '../services/library'
 import { Reveal, Stagger, StaggerItem } from '../components/motion/Reveal'
@@ -91,17 +91,6 @@ export function AuthorPage() {
                 leur attribution reste incertaine.
               </p>
             )}
-
-            <div className="author-actions">
-              <Link className="button button--outline button--md" to={`/bibliotheque?auteur=${author.id}`}>
-                <BookOpen size={16} /> Ouvrir dans la bibliothèque
-              </Link>
-              {works[0] ? (
-                <Link className="button button--primary button--md" to={`/xassida/${works[0].slug}`}>
-                  Commencer la lecture <ArrowRight size={16} />
-                </Link>
-              ) : null}
-            </div>
           </div>
         </section>
       </Reveal>

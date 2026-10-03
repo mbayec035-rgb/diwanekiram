@@ -7,6 +7,10 @@
  *   1. le catalogue publié par xassida.sn (scripts/extract-content.mjs)
  *   2. les textes déposés dans content/ (auteurs, œuvres, traductions)
  *
+ * Les transcriptions phonétiques déposées dans content/phonetique/
+ * priment ensuite sur la traduction existante : c'est la convention
+ * choisie qui parle, pas l'ancienne lisibilité de mot en mot.
+ *
  *   node scripts/build-library.mjs
  *
  * L'écriture est non destructive : le script calcule la liste complète
@@ -24,6 +28,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { loadSourceCatalogue } from './extract-content.mjs'
+import { listPhonetique, readPhonetique } from './lib/content.mjs'
 import {
   addWork,
   chaptersOf,
@@ -318,8 +323,22 @@ async function writeData() {
 
   const items = []
 
+  /* Les transcriptions déposées, indexées par œuvre : une par fichier,
+     la relecture humaine passe avant la règle. */
+  const phonetiques = new Map()
+  for (const file of await listPhonetique()) {
+    const stem = path.basename(file, '.json')
+    const depose = await readPhonetique(stem)
+    if (depose?.verses) phonetiques.set(depose.slug ?? stem, depose.verses)
+  }
+
+  let transcrites = 0
+
   for (const xassida of derived.xassidas) {
     const chapters = chaptersOf(catalogue, xassida.id)
+    const phonetique = phonetiques.get(xassida.slug) ?? {}
+
+    transcrites += Object.keys(phonetique).length
 
     await write(`verses/${xassida.slug}.json`, {
       id: xassida.id,
@@ -334,7 +353,10 @@ async function writeData() {
             id: verse.id,
             n: verse.n,
             ar: verse.ar,
-            tr: verse.tr,
+            /* Le publié passe avant la règle : content/phonetique/ ne
+               remplit que les trous, il n'écrase pas une transcription
+               déjà donnée au lecteur. */
+            tr: verse.tr?.trim() ? verse.tr : phonetique[verse.id] || '',
             /* Les hémistiches ne sont émis que lorsqu'ils existent : les
                œuvres qui ne les fournissent pas gardent la forme d'avant. */
             ...(verse.sadr ? { sadr: verse.sadr } : {}),
@@ -403,7 +425,7 @@ async function writeData() {
     await rm(path.join(OUT_DIR, relative), { force: true })
   }
 
-  return { totals, items, expected, stale, totalBytes, derived }
+  return { totals, items, expected, stale, totalBytes, derived, transcrites, phonetiques }
 }
 
 /* ------------------------------------------------------------------ *
@@ -455,6 +477,10 @@ log(`  chapitres       ${totals.chapters}`)
 log(`  versets         ${totals.verses}`)
 log(`  traductions fr  ${totals.translations} (${totals.translationRatio} %)`)
 log(`  auteurs         ${totals.authors}`)
+log(
+  `  phonétique      ${result.transcrites} verset(s) depuis content/phonetique/` +
+    ` (${result.phonetiques.size} œuvre(s))`,
+)
 log(`  poids json      ${(result.totalBytes / 1024 / 1024).toFixed(2)} Mo`)
 log(`\n  ${result.items.filter((item) => item.translated === 0).length} œuvre(s) sans traduction FR`)
 log(`  ${ok('bibliothèque écrite dans public/data/')}\n`)

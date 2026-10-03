@@ -688,6 +688,76 @@
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
 }
 
+/* ---- Choix de vue : grille ou liste ----
+
+   Les colonnes sont explicites plutôt que calculées : une seule sur
+   mobile, deux dès la tablette, trois puis quatre quand la largeur le
+   permet. La ligne, elle, ne s'étire que d'une seule colonne. */
+
+.view-stack {
+  display: grid;
+  gap: var(--space-4);
+  transition: gap var(--dur-base) ease;
+}
+
+.view-stack.grid {
+  grid-template-columns: 1fr;
+}
+
+.view-stack.list {
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+}
+
+/* La carte est l'élément de la grille : elle prend toute la hauteur. */
+.xcard-item {
+  display: grid;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .view-stack.grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .view-stack.grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1440px) {
+  .view-stack.grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Changer de vue rejoue une entrée courte, en cascade : on voit la
+   collection se rangers plutôt que sauter d'un coup. */
+@keyframes view-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.view-stack > * {
+  animation: view-item-in var(--dur-slow) ease both;
+  animation-delay: calc(min(var(--i, 0), 12) * 16ms);
+}
+
+.view-toggle {
+  flex: 0 0 auto;
+  align-self: end;
+  white-space: nowrap;
+}
+
 .authors-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -723,6 +793,8 @@
   grid-template-columns: auto 1fr;
   gap: var(--space-5);
   align-items: start;
+  /* Padding égal sur les quatre côtés : c'est la notice qui ferme la carte,
+     le bas ne doit pas respirer moins que le haut. */
   padding: var(--space-6);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
@@ -763,13 +835,6 @@
 .author-bio--empty {
   color: var(--text-faint);
   font-style: italic;
-}
-
-.author-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-top: var(--space-2);
 }
 
 .back-link {
@@ -997,18 +1062,38 @@
 }
 
 .acard-name {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  width: 100%;
+  text-align: left;
   font-size: var(--step-0);
   font-weight: 600;
   line-height: 1.3;
+  min-height: calc(2 * 1.3em);
 }
 
+/* Même règle que sur les cartes d'œuvres : le nom arabe tient sur sa
+   propre ligne, sous le nom français. Les lettres restent en RTL, mais la
+   ligne part du même bord gauche — sans quoi le nom arabe dérives et les
+   repères ci-dessous ne s'alignent plus. */
 .acard-name-ar {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  width: 100%;
+  direction: rtl;
+  text-align: left;
   font-family: var(--font-arabic);
   font-size: var(--step-0);
+  line-height: 1.9;
+  min-height: calc(2 * 1.9em);
   color: var(--mint);
   opacity: 0.85;
-  line-height: 1.7;
 }
 
 .acard-bio {
@@ -1038,6 +1123,63 @@
   flex-wrap: wrap;
   gap: var(--space-2);
   margin-top: 0.35rem;
+  /* Une rangée de badges réservée : les repères démarrent au même endroit. */
+  min-height: 1.7rem;
+  /* Même bord gauche que le nom et le nom arabe. */
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+/* Fiche auteur en ligne : portrait, identité, notice sur une ligne. */
+
+.acard--row .acard-link {
+  display: grid;
+  grid-template-columns: auto minmax(0, 18rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+}
+
+.acard--row .acard-bio {
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  margin: 0;
+}
+
+/* Même ordre qu'en grille, une ligne de haut au lieu de deux. */
+.acard--row .acard-name,
+.acard--row .acard-name-ar {
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acard--row .acard-name {
+  min-height: calc(1 * 1.3em);
+}
+
+.acard--row .acard-name-ar {
+  min-height: calc(1 * 1.9em);
+}
+
+.acard--row .acard-chevron {
+  margin-top: 0;
+}
+
+@media (max-width: 900px) {
+  .acard--row .acard-link {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  /* La notice ferait un nœud dans la colonne : la fiche reste lisible
+     sans elle, on la retrouve sur la page de l'auteur. */
+  .acard--row .acard-bio {
+    display: none;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1079,25 +1221,57 @@
   height: 100%;
 }
 
+/* Gabarit commun aux deux vues : titre, puis le texte arabe sur sa propre
+   ligne, puis l'auteur. Chaque bloc réserve sa place même vide ou trop
+   long — deux lignes pour la carte, une pour la ligne — pour que toutes
+   les cartes se ressemblent. */
+
 .xcard-head {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: var(--space-2);
+  /* Le favori flotte en haut à droite : on lui laisse la place. */
+  padding-inline-end: 2.75rem;
 }
 
 .xcard-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  width: 100%;
+  text-align: left;
   font-size: var(--step-1);
+  line-height: 1.3;
+  min-height: calc(2 * 1.3em);
 }
 
 .xcard-arabic {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  /* Le texte arabe garde son rendu RTL (lettres, ponctuation, ordre des
+     mots) mais démarre sur le bord gauche du titre, comme lui. */
+  width: 100%;
+  direction: rtl;
+  text-align: left;
   font-family: var(--font-arabic);
-  font-size: var(--step-2);
+  font-size: var(--step-0);
+  line-height: 1.9;
+  min-height: calc(2 * 1.9em);
   color: var(--mint);
   opacity: 0.85;
-  line-height: 1.8;
 }
 
 .xcard-author {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  overflow: hidden;
   font-size: var(--step--1);
   color: var(--text-dim);
 }
@@ -1105,14 +1279,23 @@
 .xcard-meta {
   display: flex;
   gap: var(--space-4);
+  overflow: hidden;
   font-size: var(--step--1);
+  line-height: 1.5;
   color: var(--text-soft);
 }
 
 .xcard-meta span {
+  flex: none;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  white-space: nowrap;
+}
+
+/* Donnée absente : la pastille garde sa place, sans rien afficher. */
+.xcard-meta .is-empty {
+  visibility: hidden;
 }
 
 .xcard-progress {
@@ -1152,6 +1335,106 @@
 .xcard-fav.is-active {
   color: var(--danger);
   border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+}
+
+/* Xassida en ligne : monogramme, titre, puis les chiffres à droite. */
+
+.xcard--row .xcard-body {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+}
+
+.xcard-thumb {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  /* Une teinte par ligne, comme les monogrammes d'auteurs. */
+  --avatar-hue: calc(190 + var(--i, 0) * 37);
+  background:
+    radial-gradient(circle at 30% 20%, hsl(var(--avatar-hue, 190) 70% 45% / 0.5), transparent 60%),
+    linear-gradient(150deg, hsl(var(--avatar-hue, 190) 55% 22%), hsl(calc(var(--avatar-hue, 190) + 40) 45% 12%));
+  font-family: var(--font-arabic);
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--text);
+}
+
+.xcard--row .xcard-head {
+  flex: 1 1 14rem;
+  min-width: 0;
+  /* Le favori n'est plus flottant : la place se libère. */
+  padding-inline-end: 0;
+}
+
+/* Même ordre qu'en grille, une ligne de haut au lieu de deux. */
+.xcard--row .xcard-title,
+.xcard--row .xcard-arabic {
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.xcard--row .xcard-title {
+  min-height: calc(1 * 1.3em);
+}
+
+.xcard--row .xcard-arabic {
+  min-height: calc(1 * 1.9em);
+}
+
+.xcard--row .xcard-author,
+.xcard--row .xcard-meta,
+.xcard--row .badge {
+  flex: none;
+}
+
+.xcard--row .xcard-progress {
+  margin-top: 0;
+  flex: none;
+}
+
+.xcard--row .progress {
+  width: 7rem;
+  flex: none;
+}
+
+/* En ligne, le favori se range en bout de ligne au lieu de flotter sur
+   le titre. */
+.xcard--row .xcard-fav {
+  position: static;
+  flex: none;
+  margin-right: var(--space-1);
+}
+
+@media (max-width: 900px) {
+  .xcard--row .xcard-author,
+  .xcard--row .xcard-progress {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .xcard--row .xcard-body {
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .xcard--row .xcard-thumb {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.2rem;
+  }
+
+  .xcard--row .xcard-meta {
+    display: none;
+  }
 }
 
 /* ---------------- Fonctionnalités / CTA ---------------- */
@@ -1464,63 +1747,8 @@
 /* ---------------- Lecteur ---------------- */
 
 .reader {
-  display: grid;
-  grid-template-columns: 15rem 1fr;
-  gap: var(--space-6);
-  align-items: start;
   max-width: var(--content-wide);
   margin: 0 auto;
-}
-
-.reader-toc {
-  position: sticky;
-  top: calc(var(--topbar-h) + var(--space-5));
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  max-height: calc(100dvh - var(--topbar-h) - var(--space-7));
-  overflow: auto;
-}
-
-.reader-toc-title {
-  font-size: var(--step--1);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-
-.reader-toc ul {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.toc-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.45rem 0.6rem;
-  border-radius: var(--radius-sm);
-  font-size: var(--step--1);
-  color: var(--text-soft);
-  text-align: left;
-  transition: background var(--dur-fast), color var(--dur-fast);
-}
-
-.toc-item:hover {
-  background: var(--accent-grad-soft);
-  color: var(--text);
-}
-
-.toc-item.is-active {
-  color: var(--cyan);
-  background: var(--accent-grad-soft);
 }
 
 .reader-main {
@@ -1596,44 +1824,99 @@
   font-family: var(--font-arabic);
 }
 
-.reader-display {
-  position: sticky;
-  top: calc(var(--topbar-h) + 0.25rem);
-  z-index: 30;
+/* ---------------- Barre flottante du lecteur ---------------- */
+
+/* Pile de boutons carrés collés au bord droit, à un tiers de l'écran :
+   la position reste sous la barre supérieure, quelle que soit la
+   hauteur de la fenêtre. */
+.display-rail {
+  position: fixed;
+  right: 0;
+  top: max(calc(var(--topbar-h) + var(--space-4)), 32vh);
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.reader-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg) 84%, transparent);
-  backdrop-filter: blur(14px);
+.rail-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  border: 1px solid var(--border-strong);
+  border-right: 0;
+  /* Fond sombre bleuté en thème sombre, gris bleuté en thème clair. */
+  background: color-mix(in srgb, var(--surface-solid) 84%, #12253a);
+  color: var(--text);
+  transition: transform var(--dur-fast) ease, background var(--dur-fast), border-color var(--dur-fast);
 }
 
-.toolbar-group {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+/* Petit accent coloré sur le bord gauche, une teinte par bouton. */
+.rail-button::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 28%;
+  bottom: 28%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--rail-accent, var(--cyan));
+  opacity: 0.85;
+}
+
+.rail-button:hover,
+.rail-button:focus-visible {
+  transform: translateX(-0.25rem);
+  border-color: var(--rail-accent, var(--cyan));
+}
+
+.rail-button:focus-visible {
+  outline: 2px solid var(--rail-accent, var(--cyan));
+  outline-offset: -3px;
+}
+
+.rail-button--display {
+  --rail-accent: var(--cyan);
+}
+
+/* Le sommaire partage l'accent cyan du rail : c'est un réglage de lecture
+   comme les deux autres boutons. */
+.rail-button--chapter {
+  --rail-accent: var(--cyan);
+}
+
+.rail-button--learn {
+  --rail-accent: var(--mint);
+}
+
+.rail-button--quiz {
+  --rail-accent: var(--amber);
+}
+
+.rail-button.is-active {
+  background: color-mix(in srgb, var(--surface-solid) 70%, #12253a);
+}
+
+.rail-button.is-active::before {
+  opacity: 1;
+  top: 18%;
+  bottom: 18%;
 }
 
 /* ---------------- Panneau de réglages d'affichage ---------------- */
 
-.display-toggle.is-active {
-  color: var(--cyan);
-  border-color: var(--border-strong);
-}
-
+/* Ouvert vers la gauche du bouton, son bord droit aligné sur la pile. */
 .display-panel {
   position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
+  top: 0;
+  right: calc(100% + var(--space-3));
+  z-index: 46;
   width: min(21rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - max(calc(var(--topbar-h) + var(--space-4)), 32vh) - var(--space-4));
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -1642,7 +1925,67 @@
   border: 1px solid var(--border-strong);
   background: var(--surface);
   box-shadow: var(--shadow-lift);
-  z-index: 40;
+}
+
+.display-panel:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+.display-panel[data-phase='open'] {
+  animation: display-panel-in 160ms ease-out both;
+}
+
+.display-panel[data-phase='closing'] {
+  animation: display-panel-out 140ms ease-in both;
+}
+
+@keyframes display-panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(0.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes display-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes display-sheet-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+}
+
+@keyframes display-panel-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(0.5rem);
+  }
 }
 
 .display-panel-head {
@@ -1776,6 +2119,242 @@
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-4) 0;
+}
+
+/* ---------------- Sommaire des chapitres ---------------- */
+
+/* Fond d'ombre : il occupe l'écran sans jamais pousser le texte, qui reste
+   en place dessous pendant toute l'ouverture. */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 47;
+  background: rgb(2 8 16 / 0.55);
+  backdrop-filter: blur(2px);
+  animation: drawer-fade-in 160ms ease-out both;
+}
+
+@keyframes drawer-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Sous la barre du haut plutôt que dessous : son titre et son bouton de
+   fermeture ne doivent jamais passer dessous. */
+.chapter-drawer {
+  position: fixed;
+  inset: var(--topbar-h) 0 0 auto;
+  z-index: 48;
+  width: min(21rem, 88vw);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  border-left: 1px solid var(--border-strong);
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
+  touch-action: pan-y;
+}
+
+.chapter-drawer:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: -2px;
+}
+
+.chapter-drawer[data-phase='open'] {
+  animation: chapter-drawer-in 180ms ease-out both;
+}
+
+.chapter-drawer[data-phase='closing'] {
+  animation: chapter-drawer-out 160ms ease-in both;
+}
+
+@keyframes chapter-drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes chapter-drawer-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+}
+
+/* Poignée : décorative sur grand écran, c'est elle qu'on saisit pour
+   refermer la feuille d'un glissement sur mobile. */
+.chapter-drawer-grab {
+  display: none;
+  justify-content: center;
+  padding-block: 0.15rem;
+}
+
+.chapter-drawer-grab span {
+  width: 2.5rem;
+  height: 0.25rem;
+  border-radius: 999px;
+  background: var(--border-strong);
+}
+
+.chapter-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.chapter-drawer-title {
+  font-size: var(--step--1);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.chapter-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-solid);
+  color: var(--text-dim);
+}
+
+.chapter-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font-size: var(--step--1);
+  color: var(--text);
+}
+
+.chapter-search input:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+.chapter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0;
+  padding: 0 var(--space-1);
+  /* La liste scrolle, pas le tiroir : le titre et la recherche restent. */
+  flex: 1;
+}
+
+.chapter-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--step--1);
+  color: var(--text-soft);
+  text-align: left;
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+
+.chapter-item:hover {
+  background: var(--accent-grad-soft);
+  color: var(--text);
+}
+
+.chapter-item.is-active {
+  color: var(--cyan);
+  background: var(--accent-grad-soft);
+  font-weight: 600;
+}
+
+.chapter-item-label {
+  font-variant-numeric: tabular-nums;
+}
+
+.chapter-empty {
+  padding: var(--space-4) 0.6rem;
+  font-size: var(--step--1);
+  color: var(--text-dim);
+}
+
+/* ---------------- Sélecteur de chapitre ---------------- */
+
+.chapter-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.chapter-stepper-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--step--1);
+  color: var(--text);
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+
+.chapter-stepper-label:hover,
+.chapter-stepper-label.is-active {
+  background: var(--accent-grad-soft);
+  color: var(--cyan);
+}
+
+.chapter-stepper-label:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+.chapter-stepper-current {
+  font-weight: 600;
+}
+
+.chapter-stepper-total {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.chapter-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+}
+
+.chapter-footer-position {
+  font-size: var(--step--1);
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
 }
 
 .reader-chapter {
@@ -1919,28 +2498,11 @@ kbd {
   color: var(--text-soft);
 }
 
-@media (max-width: 1023px) {
-  .reader {
-    grid-template-columns: 1fr;
-  }
-
-  .reader-toc {
-    position: static;
-    max-height: none;
-    flex-direction: row;
-    align-items: center;
-    gap: var(--space-3);
-    overflow-x: auto;
-  }
-
-  .reader-toc ul {
-    flex-direction: row;
-    gap: var(--space-2);
-  }
-
-  .toc-item {
-    white-space: nowrap;
-    width: auto;
+/* Le rail est fixe au bord droit : tant que la colonne de lecture
+   n'est pas centrée dans la fenêtre, on lui laisse sa gouttière. */
+@media (max-width: 104rem) {
+  .reader-main {
+    padding-inline-end: calc(3.5rem + var(--space-3));
   }
 }
 
@@ -2248,10 +2810,6 @@ kbd {
 }
 
 /* ---------------- Apprentissage ---------------- */
-
-.toolbar-group--practice {
-  margin-left: auto;
-}
 
 .study-progress {
   display: flex;
@@ -2580,8 +3138,82 @@ kbd {
 }
 
 @media (max-width: 640px) {
-  .toolbar-group--practice {
-    margin-left: 0;
+  .rail-button {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  /* Sur mobile le sommaire devient une feuille : elle remonte du bas, ne
+     dépasse pas les 70 % de l'écran, et se ferme d'un glissement. */
+  .chapter-drawer {
+    inset: auto 0 0 0;
+    width: auto;
+    max-height: 70dvh;
+    padding: var(--space-3) var(--space-4) var(--space-5);
+    border-left: 0;
+    border-top: 1px solid var(--border-strong);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  }
+
+  .chapter-drawer[data-phase='open'] {
+    animation-name: chapter-sheet-in;
+  }
+
+  .chapter-drawer[data-phase='closing'] {
+    animation-name: chapter-sheet-out;
+  }
+
+  @keyframes chapter-sheet-in {
+    from {
+      opacity: 0;
+      transform: translateY(2rem);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes chapter-sheet-out {
+    from {
+      opacity: 1;
+      transform: none;
+    }
+
+    to {
+      opacity: 0;
+      transform: translateY(2rem);
+    }
+  }
+
+  .chapter-drawer-grab {
+    display: flex;
+  }
+
+  .chapter-footer {
+    flex-wrap: wrap;
+  }
+
+  .reader-main {
+    padding-inline-end: calc(3rem + var(--space-3));
+  }
+
+  /* Le panneau remonte du bas : sous le pouce, sans couper la lecture. */
+  .display-panel {
+    position: fixed;
+    inset: auto 0 0 0;
+    width: auto;
+    max-height: 78dvh;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  }
+
+  .display-panel[data-phase='open'] {
+    animation-name: display-sheet-in;
+  }
+
+  .display-panel[data-phase='closing'] {
+    animation-name: display-sheet-out;
   }
 
   .study-controls {

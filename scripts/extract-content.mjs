@@ -1,16 +1,23 @@
 #!/usr/bin/env node
 /**
- * DiwaneKiram — lecture du catalogue publié par xassida.sn
+ * DiwaneKiram — lecture du catalogue source
  *
- * Récupère le jeu de données embarqué dans le bundle public du site,
- * puis renvoie un catalogue normalisé. Ce module n'écrit rien :
- * c'est scripts/build-library.mjs qui fusionne le résultat avec les
- * textes déposés dans content/ puis produit public/data/.
+ * Renvoie un catalogue normalisé. Ce module n'écrit rien : c'est
+ * scripts/build-library.mjs qui fusionne le résultat avec les textes déposés
+ * dans content/ puis produit public/data/.
  *
  *   node scripts/extract-content.mjs      # résumé seul
  *
- * L'API du site (api.xassida.sn) n'est pas utilisée : elle est hors
- * service de façon récurrente. Seul le bundle statique est lu.
+ * Deux origines possibles, dans cet ordre :
+ *
+ *   1. content/source/residu.json — figeage local, hors ligne, par défaut.
+ *      Les sources en ligne ont régressé (le site est passé de xassida.sn à
+ *      markazulfuhum.app, puis de Next.js à une API qui n'expose plus que
+ *      241 des 277 œuvres). Sans ce figeage, un build supprimerait 36 œuvres
+ *      et 2 420 versets. Voir scripts/snapshot-source.mjs.
+ *
+ *   2. Le bundle public du site — chemin historique, conservé pour le cas où
+ *      le figeage manquerait. Il suppose un site Next.js qui n'existe plus.
  */
 
 import { readFile } from 'node:fs/promises'
@@ -32,6 +39,7 @@ import {
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const PORTRAIT_DIR = path.join(ROOT, 'public', 'authors')
+const SNAPSHOT_FILE = path.join(ROOT, 'content', 'source', 'residu.json')
 const SITE = 'https://www.xassida.sn'
 
 const log = (...args) => console.log(...args)
@@ -170,10 +178,98 @@ async function loadAuthorNotes() {
  * ------------------------------------------------------------------ */
 
 /**
- * Charge le catalogue de xassida.sn.
+ * Construit un catalogue à partir du figeage local content/source/residu.json.
+ * C'est le chemin par défaut : il est hors ligne et ne peut rien perdre.
+ * @returns {Promise<import('./lib/catalogue.mjs').Catalogue>}
+ */
+export async function loadSnapshotCatalogue() {
+  const snapshot = JSON.parse(await readFile(SNAPSHOT_FILE, 'utf8'))
+
+  const catalogue = emptyCatalogue()
+
+  /* --- auteurs --- */
+  for (const raw of snapshot.authors ?? []) {
+    catalogue.authors.push({
+      id: String(raw.id),
+      slug: raw.slug,
+      name: raw.name,
+      nameAr: raw.nameAr,
+      tariha: raw.tariha ?? 'tidjan',
+      anonymous: Boolean(raw.anonymous),
+      bio: raw.bio ?? '',
+      bioSource: raw.bioSource ?? 'none',
+      /* Les portraits distants ne sont pas redistribués : on ne garde que
+         ceux qui existent réellement dans public/authors/. */
+      picture: resolveLocalPortrait(raw.picture, PORTRAIT_DIR),
+    })
+  }
+
+  const anonymousAuthor = catalogue.authors.find((author) => author.anonymous)
+  const knownAuthorIds = new Set(catalogue.authors.map((author) => author.id))
+  const usedWorkSlugs = new Set()
+
+  /* --- œuvres --- */
+  for (const raw of snapshot.xassidas ?? []) {
+    const authorId = knownAuthorIds.has(String(raw.authorId))
+      ? String(raw.authorId)
+      : (anonymousAuthor?.id ?? String(raw.authorId))
+
+    const normalised = normaliseWork(
+      {
+        id: raw.id,
+        slug: raw.slug,
+        name: raw.name,
+        nameAr: raw.nameAr,
+        authorId,
+        meter: raw.meter,
+        rhyme: raw.rhyme,
+        category: raw.category,
+        chapters: raw.chapters,
+      },
+      { origin: 'content/source/residu.json', usedSlugs: usedWorkSlugs },
+    )
+
+    addWork(catalogue, normalised)
+  }
+
+  /* --- traductions ---
+     Elles couvrent toutes les œuvres, pas seulement le résidu : les fichiers
+     déposés dans content/ ne portent pas de français, il venait de la source.
+     Les identifiants de verset sont les mêmes des deux côtés, donc ces
+     traductions se rattachent au bon verset après fusion. */
+  for (const [verseId, text] of Object.entries(snapshot.translations ?? {})) {
+    if (text) catalogue.translations.set(verseId, text)
+  }
+
+  for (const entry of snapshot.audio ?? []) {
+    catalogue.audio.push(entry)
+  }
+
+  catalogue.skippedWithoutVerses = 0
+  catalogue.source = snapshot.origin ?? 'content/source/residu.json'
+  catalogue.snapshotAt = snapshot.generatedAt ?? null
+
+  return catalogue
+}
+
+/**
+ * Catalogue de base pour scripts/build-library.mjs.
+ *
+ * Le figeage local prime : il est complet et hors ligne. Le bundle en ligne
+ * n'est consulté que si le figeage a été supprimé, et son échec est explicite
+ * plutôt que silencieux.
  * @returns {Promise<import('./lib/catalogue.mjs').Catalogue>}
  */
 export async function loadSourceCatalogue() {
+  if (existsSync(SNAPSHOT_FILE)) return loadSnapshotCatalogue()
+  return loadBundleCatalogue()
+}
+
+/**
+ * Catalogue reconstruit depuis le bundle public du site (chemin historique).
+ * @returns {Promise<import('./lib/catalogue.mjs').Catalogue>}
+ */
+export async function loadBundleCatalogue() {
   const chunk = await findDataChunk()
   const tables = flattenTables(parseEmbeddedJson(chunk.code))
 

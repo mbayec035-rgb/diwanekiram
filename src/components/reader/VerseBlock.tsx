@@ -74,7 +74,7 @@ function VerseBlock({
         )
       ) : null}
 
-      {showTranscription ? (
+      {showTranscription && verse.tr.trim().length > 0 ? (
         <p className="verse-transcription" lang="ar-Latn" dir="ltr">
           <TypeIcon size={13} aria-hidden="true" /> {verse.tr}
         </p>
