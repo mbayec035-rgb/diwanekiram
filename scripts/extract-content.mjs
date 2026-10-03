@@ -1,36 +1,38 @@
 #!/usr/bin/env node
 /**
- * DiwaneKiram — ingestion du catalogue
+ * DiwaneKiram — lecture du catalogue publié par xassida.sn
  *
- * Récupère le jeu de données embarqué dans le bundle public de xassida.sn,
- * puis l'écrit dans public/data/ aux formats consommés par l'application.
+ * Récupère le jeu de données embarqué dans le bundle public du site,
+ * puis renvoie un catalogue normalisé. Ce module n'écrit rien :
+ * c'est scripts/build-library.mjs qui fusionne le résultat avec les
+ * textes déposés dans content/ puis produit public/data/.
  *
- *   node scripts/extract-content.mjs
+ *   node scripts/extract-content.mjs      # résumé seul
  *
- * Le script est idempotent : il écrase complètement public/data/.
+ * L'API du site (api.xassida.sn) n'est pas utilisée : elle est hors
+ * service de façon récurrente. Seul le bundle statique est lu.
  */
 
-import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
+import {
+  addWork,
+  clean,
+  cleanRichText,
+  emptyCatalogue,
+  normaliseWork,
+  resolveLocalPortrait,
+  slugify,
+  uniqueSlug,
+} from './lib/catalogue.mjs'
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const OUT_DIR = path.join(ROOT, 'public', 'data')
 const PORTRAIT_DIR = path.join(ROOT, 'public', 'authors')
 const SITE = 'https://www.xassida.sn'
-const TARIHA_LABEL = { tidjan: 'Tidjan' }
-
-/* Renvoie le chemin public d'un portrait uniquement s'il est présent
-   dans public/authors/ ; sinon null (l'interface affiche des initiales). */
-function resolveLocalPortrait(candidate) {
-  if (!candidate) return null
-  const relative = String(candidate).replace(/^https?:\/\/[^/]+/, '').replace(/^\/+/, '')
-  if (!relative) return null
-  const name = path.basename(relative)
-  return existsSync(path.join(PORTRAIT_DIR, name)) ? `authors/${name}` : null
-}
 
 const log = (...args) => console.log(...args)
 const step = (title) => log(`\n\x1b[36m▸ ${title}\x1b[0m`)
@@ -56,13 +58,13 @@ async function findDataChunk() {
     if (!response.ok) continue
     const code = await response.text()
 
-    let cursor = code.indexOf('JSON.parse(\'')
+    let cursor = code.indexOf("JSON.parse('")
     while (cursor !== -1) {
       const literal = readJsStringLiteral(code, cursor + 'JSON.parse('.length)
       if (literal && literal.length > 100_000 && literal.includes('ar_name')) {
         if (!best || literal.length > best.size) best = { url, code: literal }
       }
-      cursor = code.indexOf('JSON.parse(\'', cursor + 1)
+      cursor = code.indexOf("JSON.parse('", cursor + 1)
     }
   }
 
@@ -120,7 +122,8 @@ function flattenTables(payload) {
   for (const [table, buckets] of Object.entries(changes)) {
     const rows = new Map()
     for (const row of buckets.created ?? []) rows.set(String(row.id), row)
-    for (const row of buckets.updated ?? []) rows.set(String(row.id), { ...rows.get(String(row.id)), ...row })
+    for (const row of buckets.updated ?? [])
+      rows.set(String(row.id), { ...rows.get(String(row.id)), ...row })
     for (const row of buckets.deleted ?? []) rows.delete(String(row.id))
     tables[table] = [...rows.values()]
   }
@@ -129,61 +132,18 @@ function flattenTables(payload) {
 }
 
 /* ------------------------------------------------------------------ *
- * 3. Nettoyage
+ * 3. Résolution des auteurs
  * ------------------------------------------------------------------ */
 
-const INVISIBLE = /[\u00A0\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g
-const DIACRITICS = /[\u0300-\u036f]/g
-
-const clean = (value) =>
-  typeof value === 'string'
-    ? value
-        .replace(INVISIBLE, '')
-        .replace(/[ \t]{2,}/g, ' ')
-        .trim()
-    : value
-
-/* Le texte du catalogue arrive en markdown : on retire la syntaxe
-   pour n'afficher que des paragraphes de texte brut. */
-const cleanRichText = (value) =>
-  typeof value === 'string'
-    ? value
-        .replace(/\\n/g, '\n')
-        .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
-        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-        .replace(/^\s{0,3}#{1,6}\s+/gm, '')
-        .replace(/^\s{0,3}>\s?/gm, '')
-        .replace(/(\*\*|__|\*|_|`)/g, '')
-        .replace(/[ \t]{2,}/g, ' ')
-        .replace(/\n{3,}/g, '\n\n')
-        .trim()
-    : value
-
-const titleCase = (value) =>
-  clean(value.replace(/_/g, ' '))
-    .split(' ')
-    .filter(Boolean)
-    .map((word) =>
-      /^(al|el|ab|as|ad|an|ar|as|ay|az|ch|dh|gh|kh|mr|nd|ny|ou|sr|st|sy|th|wa|ye|zi)$/i.test(word)
-        ? word.toLowerCase()
-        : word.charAt(0).toUpperCase() + word.slice(1),
-    )
-    .join(' ')
-
-const slugify = (value) =>
-  clean(value)
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(DIACRITICS, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-
-const ANONYMOUS = { id: 'anonymous', name: 'Auteur anonyme', nameFr: 'Auteur anonyme' }
+const ANONYMOUS = {
+  name: 'Auteur anonyme',
+  nameAr: 'مؤلَّفٌ مجهول',
+}
 
 function resolveAuthor(raw) {
   if (!raw || raw.name === 'autre' || raw.name === 'Autre') {
     return {
-      id: raw?.id ?? 'unknown',
+      id: raw?.id ?? 'anonymous',
       name: ANONYMOUS.name,
       nameAr: clean(raw?.ar_name ?? '') || ANONYMOUS.nameAr,
       tariha: raw?.tariha ?? 'tidjan',
@@ -199,64 +159,56 @@ function resolveAuthor(raw) {
   }
 }
 
-/* ------------------------------------------------------------------ *
- * 4. Extraction
- * ------------------------------------------------------------------ */
-
 async function loadAuthorNotes() {
   const file = path.join(ROOT, 'src', 'data', 'author-notes.json')
   if (!existsSync(file)) return {}
   return JSON.parse(await readFile(file, 'utf8'))
 }
 
-async function extract() {
-  step('Localisation du catalogue source')
+/* ------------------------------------------------------------------ *
+ * 4. Lecture
+ * ------------------------------------------------------------------ */
+
+/**
+ * Charge le catalogue de xassida.sn.
+ * @returns {Promise<import('./lib/catalogue.mjs').Catalogue>}
+ */
+export async function loadSourceCatalogue() {
   const chunk = await findDataChunk()
-  const payload = parseEmbeddedJson(chunk.code)
-  const tables = flattenTables(payload)
+  const tables = flattenTables(parseEmbeddedJson(chunk.code))
 
-  const rawAuthors = tables.authors ?? []
-  const rawXassidas = tables.xassidas ?? []
-  const rawChapters = tables.chapters ?? []
-  const rawVerses = tables.verses ?? []
-  const rawTranslations = tables.verse_translations ?? []
   const rawBios = tables.author_infos ?? []
-  const rawAudios = tables.audios ?? []
-  const rawReciters = tables.reciters ?? []
-
-  log(`  source : ${chunk.url}`)
-  log(
-    `  ${rawXassidas.length} xassidas · ${rawVerses.length} versets · ${rawTranslations.length} traductions · ${rawAuthors.length} auteurs`,
-  )
-
-  step('Nettoyage et structuration')
   const notes = await loadAuthorNotes()
 
   /* --- auteurs --- */
   const biosByAuthor = new Map()
   for (const bio of rawBios) {
-    if (!biosByAuthor.has(String(bio.author_id))) biosByAuthor.set(String(bio.author_id), [])
-    biosByAuthor.get(String(bio.author_id)).push(bio)
+    const key = String(bio.author_id)
+    if (!biosByAuthor.has(key)) biosByAuthor.set(key, [])
+    biosByAuthor.get(key).push(bio)
   }
 
-  const recitersById = new Map(rawReciters.map((reciter) => [String(reciter.id), reciter]))
+  const recitersById = new Map(
+    (tables.reciters ?? []).map((reciter) => [String(reciter.id), reciter]),
+  )
 
-  const authorIds = new Set(rawAuthors.map((author) => String(author.id)))
-  const authorIndex = new Map()
+  const catalogue = emptyCatalogue()
+  const usedAuthorSlugs = new Set()
 
-  for (const raw of rawAuthors) {
+  for (const raw of tables.authors ?? []) {
     const author = resolveAuthor(raw)
     const bios = biosByAuthor.get(author.id) ?? []
     const frBio = bios.find((bio) => bio.lang === 'fr')
     const note = notes[author.id] ?? notes[author.name] ?? null
 
-    authorIndex.set(author.id, {
+    catalogue.authors.push({
       id: author.id,
-      slug: author.anonymous ? 'auteur-anonyme' : slugify(author.name),
+      /* Slug unique : deux auteurs au nom proche ne doivent pas
+         se retrouver sur la même route /auteurs/:slug. */
+      slug: uniqueSlug(author.anonymous ? 'auteur-anonyme' : slugify(author.name), usedAuthorSlugs),
       name: author.name,
       nameAr: author.nameAr,
       tariha: author.tariha,
-      tarihaLabel: TARIHA_LABEL[author.tariha] ?? author.tariha,
       anonymous: author.anonymous,
       /* L'auteur inconnu reste sans notice : on n'invente pas d'attribution. */
       bio: author.anonymous ? '' : note?.bio || cleanRichText(frBio?.text ?? ''),
@@ -268,40 +220,56 @@ async function extract() {
             ? 'catalogue'
             : 'none',
       /* Les portraits du catalogue source ne sont pas redistribués :
-       on ne conserve le chemin que s'il existe localement dans public/authors/. */
-      picture: resolveLocalPortrait(raw.picture),
+         on ne conserve le chemin que s'il existe localement dans public/authors/. */
+      picture: resolveLocalPortrait(raw.picture, PORTRAIT_DIR),
     })
   }
 
-  const anonymousAuthor = [...authorIndex.values()].find((author) => author.anonymous)
+  const anonymousAuthor = catalogue.authors.find((author) => author.anonymous)
 
   /* --- traductions --- */
   const translationByVerse = new Map()
-  for (const translation of rawTranslations) {
+  for (const translation of tables.verse_translations ?? []) {
     if (translation.lang !== 'fr') continue
     const verseId = String(translation.verse_id)
     const previous = translationByVerse.get(verseId)
-    if (previous && previous.text.trim().length >= clean(translation.text).length) continue
-    translationByVerse.set(verseId, { id: String(translation.id), text: clean(translation.text) })
+    if (previous && previous.length >= clean(translation.text).length) continue
+    translationByVerse.set(verseId, clean(translation.text))
   }
 
   /* --- chapitres et versets --- */
   const chaptersByXassida = new Map()
-  for (const chapter of rawChapters) {
+  for (const chapter of tables.chapters ?? []) {
     const key = String(chapter.xassida_id)
     if (!chaptersByXassida.has(key)) chaptersByXassida.set(key, [])
-    chaptersByXassida.get(key).push(chapter)
+    chaptersByXassida.get(key).push({
+      id: String(chapter.id),
+      n: Number(chapter.number),
+      verses: [],
+    })
   }
 
   const versesByChapter = new Map()
-  for (const verse of rawVerses) {
+  for (const verse of tables.verses ?? []) {
     const key = String(verse.chapter_id)
     if (!versesByChapter.has(key)) versesByChapter.set(key, [])
-    versesByChapter.get(key).push(verse)
+    versesByChapter.get(key).push({
+      id: String(verse.id),
+      n: Number(verse.number),
+      ar: clean(verse.text),
+      tr: clean(verse.transcription ?? ''),
+    })
   }
 
+  for (const chapters of chaptersByXassida.values()) {
+    for (const chapter of chapters) {
+      chapter.verses = (versesByChapter.get(chapter.id) ?? []).sort((a, b) => a.n - b.n)
+    }
+  }
+
+  /* --- audio --- */
   const audioByXassida = new Map()
-  for (const audio of rawAudios) {
+  for (const audio of tables.audios ?? []) {
     const key = String(audio.xassida_id)
     if (!audioByXassida.has(key)) audioByXassida.set(key, [])
     audioByXassida.get(key).push({
@@ -312,196 +280,76 @@ async function extract() {
     })
   }
 
-  const usedSlugs = new Set()
-  const xassidas = []
-  const authors = []
+  /* --- œuvres --- */
+  const usedWorkSlugs = new Set()
+  const knownAuthorIds = new Set(catalogue.authors.map((author) => author.id))
+  let skipped = 0
 
-  for (const raw of rawXassidas) {
-    const xassidaId = String(raw.id)
-    const chapters = (chaptersByXassida.get(xassidaId) ?? []).sort((a, b) => Number(a.number) - Number(b.number))
+  for (const raw of tables.xassidas ?? []) {
+    const chapters = (chaptersByXassida.get(String(raw.id)) ?? []).sort((a, b) => a.n - b.n)
+    const totalVerses = chapters.reduce((total, chapter) => total + chapter.verses.length, 0)
 
-    const verseRecords = []
-    const skeleton = {}
-
-    for (const chapter of chapters) {
-      const verses = (versesByChapter.get(String(chapter.id)) ?? []).sort((a, b) => Number(a.number) - Number(b.number))
-
-      for (const verse of verses) {
-        const verseId = String(verse.id)
-        const text = clean(verse.text)
-        const transcription = clean(verse.transcription ?? '')
-        const translation = translationByVerse.get(verseId)
-
-        verseRecords.push({
-          id: verseId,
-          chapterId: String(chapter.id),
-          n: Number(verse.number),
-          ar: text,
-          tr: transcription,
-          frId: translation ? translation.id : null,
-        })
-
-        skeleton[verseId] = translation ? translation.text : ''
-      }
+    /* Une œuvre sans aucun verset n'a rien à publier dans le corpus. */
+    if (totalVerses === 0) {
+      skipped += 1
+      continue
     }
 
-    if (verseRecords.length === 0) continue
+    const authorId = knownAuthorIds.has(String(raw.author_id))
+      ? String(raw.author_id)
+      : (anonymousAuthor?.id ?? String(raw.author_id))
 
-    /* Nom arabe de repli : on utilise le premier verset s'il est court. */
-    const firstVerse = verseRecords.find((verse) => verse.ar.length > 0)?.ar ?? ''
-    let slug = slugify(raw.slug || raw.name).replace(/^tidjan-/, '')
-    if (!slug || usedSlugs.has(slug)) slug = `${slug}-${xassidaId}`
-    usedSlugs.add(slug)
+    const normalised = normaliseWork(
+      {
+        id: raw.id,
+        slug: slugify(raw.slug || raw.name).replace(/^tidjan-/, ''),
+        name: raw.name,
+        nameAr: raw.ar_name,
+        authorId,
+        chapters: chapters.map((chapter) => ({
+          id: chapter.id,
+          n: chapter.n,
+          verses: chapter.verses,
+        })),
+      },
+      { origin: 'xassida.sn', usedSlugs: usedWorkSlugs },
+    )
 
-    const xassida = {
-      id: xassidaId,
-      slug,
-      name: titleCase(raw.name),
-      nameAr: clean(raw.ar_name ?? '') || (firstVerse.length <= 90 ? firstVerse : ''),
-      nameSearch: slug.replace(/-/g, ' '),
-      authorId: authorIds.has(String(raw.author_id))
-        ? String(raw.author_id)
-        : (anonymousAuthor?.id ?? String(raw.author_id)),
-      chapterCount: chapters.length,
-      verseCount: verseRecords.length,
-      translatedCount: verseRecords.filter((verse) => verse.frId).length,
-      hasAudio: audioByXassida.has(xassidaId),
-    }
-    xassida.translatedRatio =
-      xassida.verseCount > 0 ? Math.round((xassida.translatedCount / xassida.verseCount) * 100) : 0
-    xassidas.push({ xassida, chapters, verseRecords, skeleton })
+    addWork(catalogue, normalised)
   }
 
-  xassidas.sort((a, b) => a.xassida.name.localeCompare(b.xassida.name, 'fr'))
-
-  /* --- index auteurs enrichi --- */
-  const byAuthor = new Map()
-  for (const { xassida } of xassidas) {
-    if (!byAuthor.has(xassida.authorId)) byAuthor.set(xassida.authorId, [])
-    byAuthor.get(xassida.authorId).push(xassida)
+  for (const [verseId, text] of translationByVerse) {
+    catalogue.translations.set(verseId, text)
   }
 
-  for (const author of authorIndex.values()) {
-    const owned = byAuthor.get(author.id) ?? []
-    authors.push({
-      ...author,
-      xassidaCount: owned.length,
-      verseCount: owned.reduce((total, item) => total + item.verseCount, 0),
-      slugs: owned.map((item) => item.slug),
-    })
+  for (const [xassidaId, tracks] of audioByXassida) {
+    catalogue.audio.push({ xassidaId, tracks })
   }
 
-  authors.sort((a, b) => Number(a.anonymous) - Number(b.anonymous) || a.name.localeCompare(b.name, 'fr'))
+  catalogue.skippedWithoutVerses = skipped
+  catalogue.source = chunk.url
 
-  /* ---------------------------------------------------------------- *
-   * 5. Écriture
-   * ---------------------------------------------------------------- */
-
-  step('Écriture de public/data/')
-  if (existsSync(OUT_DIR)) await rm(OUT_DIR, { recursive: true, force: true })
-  await mkdir(path.join(OUT_DIR, 'verses'), { recursive: true })
-  await mkdir(path.join(OUT_DIR, 'translations'), { recursive: true })
-
-  const write = async (relative, value) => {
-    const target = path.join(OUT_DIR, relative)
-    await mkdir(path.dirname(target), { recursive: true })
-    await writeFile(target, `${JSON.stringify(value)}\n`, 'utf8')
-    return Buffer.byteLength(JSON.stringify(value), 'utf8')
-  }
-
-  const manifestEntries = []
-  let totalBytes = 0
-
-  for (const { xassida, chapters, verseRecords, skeleton } of xassidas) {
-    const hasTranslation = xassida.translatedCount > 0
-
-    const file = await write(`verses/${xassida.slug}.json`, {
-      id: xassida.id,
-      slug: xassida.slug,
-      chapters: chapters.map((chapter) => ({
-        id: String(chapter.id),
-        n: Number(chapter.number),
-        verseCount: (versesByChapter.get(String(chapter.id)) ?? []).length,
-        verses: verseRecords
-          .filter((verse) => verse.chapterId === String(chapter.id))
-          .map(({ id, n, ar, tr }) => ({ id, n, ar, tr })),
-      })),
-    })
-    totalBytes += file
-
-    /* Un fichier de traduction est toujours écrit : il sert de squelette
-       éditable pour les xassidas qui n'ont pas encore de version française. */
-    const translationBytes = await write(`translations/${xassida.slug}.fr.json`, {
-      id: xassida.id,
-      slug: xassida.slug,
-      lang: 'fr',
-      verses: skeleton,
-    })
-    totalBytes += translationBytes
-
-    manifestEntries.push({
-      id: xassida.id,
-      slug: xassida.slug,
-      chapters: chapters.length,
-      verses: xassida.verseCount,
-      translated: xassida.translatedCount,
-      hasAudio: xassida.hasAudio,
-      file: `verses/${xassida.slug}.json`,
-      translationsFile: `translations/${xassida.slug}.fr.json`,
-      pendingTranslations: hasTranslation ? 0 : xassida.verseCount,
-    })
-  }
-
-  totalBytes += await write('authors.json', authors)
-  totalBytes += await write('xassidas.json', xassidas.map(({ xassida }) => xassida))
-  totalBytes += await write('audio.json', [...audioByXassida.entries()].map(([xassidaId, tracks]) => ({
-    xassidaId,
-    tracks: tracks.map(({ reciter, ...track }) => ({ ...track, reciter })),
-  })))
-
-  const totals = {
-    xassidas: xassidas.length,
-    chapters: xassidas.reduce((total, item) => total + item.xassida.chapterCount, 0),
-    verses: xassidas.reduce((total, item) => total + item.xassida.verseCount, 0),
-    translations: xassidas.reduce((total, item) => total + item.xassida.translatedCount, 0),
-    authors: authors.length,
-  }
-  totals.translationRatio = Math.round((totals.translations / totals.verses) * 100)
-
-  const generatedAt = new Date().toISOString()
-  await write('manifest.json', { generatedAt, totals, items: manifestEntries })
-
-  /* ---------------------------------------------------------------- *
-   * 6. Contrôles
-   * ---------------------------------------------------------------- */
-
-  step('Contrôles')
-
-  const slugSet = new Set(xassidas.map((item) => item.xassida.slug))
-  if (slugSet.size !== xassidas.length) throw new Error('Slugs dupliqués détectés.')
-
-  const missingAuthor = xassidas.filter((item) => !item.xassida.authorId)
-  if (missingAuthor.length > 0) throw new Error(`${missingAuthor.length} xassida(s) sans auteur.`)
-
-  const orphanVerses = xassidas.filter((item) => item.verseRecords.length === 0)
-  if (orphanVerses.length > 0) throw new Error(`${orphanVerses.length} xassida(s) sans verset.`)
-
-  const files = (await readdir(path.join(OUT_DIR, 'verses'))).length
-  log(`  ${files} fichier(s) de versets, ${slugSet.size} slug(s) unique(s)`)
-  log(`  ${authors.filter((author) => author.bioSource !== 'none').length}/${authors.length} auteur(s) avec notice`)
-
-  step('Résumé')
-  log(`  xassidas       ${totals.xassidas}`)
-  log(`  chapitres      ${totals.chapters}`)
-  log(`  versets        ${totals.verses}`)
-  log(`  traductions fr ${totals.translations} (${totals.translationRatio} %)`)
-  log(`  auteurs        ${totals.authors}`)
-  log(`  poids json     ${(totalBytes / 1024 / 1024).toFixed(2)} Mo`)
-  log(`\n  ${manifestEntries.filter((item) => item.translated === 0).length} xassida(s) sans traduction FR`)
-  log('  données écrites dans public/data/\n')
+  return catalogue
 }
 
-extract().catch((error) => {
-  console.error(`\n\x1b[31m✖ ${error.message}\x1b[0m`)
-  process.exitCode = 1
-})
+/* ------------------------------------------------------------------ *
+ * 5. Exécution directe : résumé seulement
+ * ------------------------------------------------------------------ */
+
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+
+if (isDirectRun) {
+  step('Lecture du catalogue xassida.sn')
+  const catalogue = await loadSourceCatalogue()
+  step('Résumé')
+  log(`  source        ${catalogue.source}`)
+  log(`  auteurs        ${catalogue.authors.length}`)
+  log(`  œuvres         ${catalogue.xassidas.length}`)
+  log(`  chapitres      ${catalogue.chapters.length}`)
+  log(`  versets        ${catalogue.verses.length}`)
+  log(`  traductions fr ${catalogue.translations.size}`)
+  if (catalogue.skippedWithoutVerses > 0) {
+    log(`  ignorées       ${catalogue.skippedWithoutVerses} œuvre(s) sans verset`)
+  }
+  log('\n  Ce module ne construit rien : utilisez `npm run data:build`.\n')
+}

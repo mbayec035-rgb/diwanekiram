@@ -1,0 +1,9 @@
+{
+  "name": "Nom Complet de l'Auteur",
+  "nameAr": "اسم المؤلف",
+  "tariha": "tidjan",
+  "bio": "Notice biographique, quelques lignes.",
+  "source": "Manuscrit transmis par …",
+  "license": "Domaine public",
+  "picture": "auteurs/mon-portrait.jpg"
+}

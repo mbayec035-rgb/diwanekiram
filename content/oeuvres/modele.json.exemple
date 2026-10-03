@@ -1,0 +1,27 @@
+{
+  "name": "Titre de l'Oeuvre",
+  "nameAr": "العنوان",
+  "author": "mon-auteur",
+  "source": "Manuscrit transmis par …",
+  "license": "Domaine public",
+  "providedBy": "Nom du contributeur",
+  "meter": { "nameAr": "البسيط", "name": "Al-Basit" },
+  "rhyme": { "nameAr": "ميمية", "name": "Mīmiyya" },
+  "category": { "nameAr": "محمديات", "name": "Muhammadiyyāt" },
+  "chapters": [
+    {
+      "n": 1,
+      "title": "Chapitre premier",
+      "verses": [
+        {
+          "ar": "وَمَنْ يُرِدْ دُخُولَ مَسْجِدٍ فَلا",
+          "tr": "wa-man yurid dukhula masjidin fala",
+          "sadr": "وَمَنْ يُرِدْ دُخُولَ مَسْجِدٍ فَلا",
+          "adj": "بُدَّ مِنَ النِّيَّاتِ نِلْتَ الْأَمَلَا"
+        },
+        { "ar": "مَا لِالْقَلْبِ مِنْ سَقَمْ", "tr": "ma lil-qalbi mini saqam" },
+        { "ar": "أَلْحُبُّ عَنْدَكَ رَاضِيٌّ", "tr": "al-hubbu 'andaka radiyyun" }
+      ]
+    }
+  ]
+}

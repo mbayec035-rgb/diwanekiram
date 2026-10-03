@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "format": "prettier --write .",
-    "data:extract": "node scripts/extract-content.mjs",
+    "data:source": "node scripts/extract-content.mjs",
+    "data:build": "node scripts/build-library.mjs",
     "authors:pictures": "node scripts/fetch-author-pictures.mjs",
     "icons": "node scripts/generate-icons.mjs"
   },
