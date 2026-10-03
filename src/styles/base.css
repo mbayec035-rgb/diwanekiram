@@ -28,9 +28,12 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
-  transition:
-    background-color var(--dur-slow) var(--ease-out),
-    color var(--dur-slow) var(--ease-out);
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+:root[data-theme] body,
+:root[data-theme] body * {
+  transition-duration: 200ms;
 }
 
 #root {
@@ -103,17 +106,6 @@ p {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: gradient-pan 9s var(--ease-in-out) infinite;
-}
-
-@keyframes gradient-pan {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
 }
 
 /* ---- Texte arabe ---- */
@@ -145,50 +137,28 @@ p {
   border-radius: 50%;
   filter: blur(90px);
   opacity: 0.5;
-  will-change: transform;
 }
 
 .ambient-aurora:nth-child(1) {
   background: radial-gradient(circle, rgba(34, 211, 238, 0.32), transparent 62%);
   top: -22vmax;
   left: -14vmax;
-  animation: drift-a 26s var(--ease-in-out) infinite alternate;
 }
 
 .ambient-aurora:nth-child(2) {
   background: radial-gradient(circle, rgba(94, 234, 212, 0.24), transparent 62%);
   bottom: -26vmax;
   right: -16vmax;
-  animation: drift-b 32s var(--ease-in-out) infinite alternate;
 }
 
 .ambient-aurora:nth-child(3) {
   background: radial-gradient(circle, rgba(59, 130, 246, 0.18), transparent 60%);
   top: 32%;
   right: 18%;
-  animation: drift-c 38s var(--ease-in-out) infinite alternate;
 }
 
 :root[data-theme='light'] .ambient-aurora {
   opacity: 0.34;
-}
-
-@keyframes drift-a {
-  to {
-    transform: translate3d(9vmax, 7vmax, 0) scale(1.14);
-  }
-}
-
-@keyframes drift-b {
-  to {
-    transform: translate3d(-11vmax, -6vmax, 0) scale(1.2);
-  }
-}
-
-@keyframes drift-c {
-  to {
-    transform: translate3d(-7vmax, 9vmax, 0) scale(0.88);
-  }
 }
 
 /* Trame d'arabesque (motif original, tracé simplifié) */
@@ -210,22 +180,6 @@ p {
   inset: -50%;
   opacity: var(--grain-opacity);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
-  animation: grain-shift 0.6s steps(3) infinite;
-}
-
-@keyframes grain-shift {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  33% {
-    transform: translate3d(-2%, 1.5%, 0);
-  }
-  66% {
-    transform: translate3d(1.5%, -2%, 0);
-  }
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
 }
 
 .ambient-vignette {
@@ -255,26 +209,6 @@ p {
   display: none;
 }
 
-.shimmer {
-  position: relative;
-  overflow: hidden;
-}
-
-.shimmer::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, var(--sheen), transparent);
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
-  }
-}
-
 /* ---- Respect des préférences de mouvement ---- */
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -284,13 +218,7 @@ p {
   *,
   *::before,
   *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-  }
-
-  .ambient-grain,
-  .ambient-aurora {
     animation: none !important;
+    transition: none !important;
   }
 }

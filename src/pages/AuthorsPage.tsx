@@ -18,7 +18,7 @@ export function AuthorsPage() {
 
     const filtered = (catalog?.authors ?? []).filter((author) => {
       if (!needle) return true
-      return normalize(`${author.name} ${author.nameAr}`).includes(needle)
+      return normalize(`${author.name} ${author.nameAr ?? ''}`).includes(needle)
     })
 
     return [...filtered].sort((a, b) => a.name.localeCompare(b.name, 'fr'))

@@ -2,20 +2,14 @@
 
 import { Link } from 'react-router-dom'
 import { Compass } from 'lucide-react'
-import { motion } from 'framer-motion'
 import { EmptyState } from '../components/ui/Bits'
 
 export function NotFoundPage() {
   return (
     <div className="page-stack page-stack--centered">
-      <motion.p
-        className="notfound-code"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-      >
+      <p className="notfound-code">
         404
-      </motion.p>
+      </p>
       <EmptyState
         icon={<Compass size={22} />}
         title="Cette page n'existe pas"

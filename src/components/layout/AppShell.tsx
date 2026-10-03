@@ -6,15 +6,10 @@ import { TopBar } from './TopBar'
 import { SideNav, MobileTabBar } from './Nav'
 import { Ambience } from '../ambience/Ambience'
 import { PageTransition, ScrollProgress } from '../motion/Feedback'
-import { useSettings, applyDocumentSettings } from '../../store/useSettings'
+import { useAppliedSettings } from '../../store/useSettings'
 
 export function AppShell() {
-  const theme = useSettings((state) => state.theme)
-  const arabicFont = useSettings((state) => state.arabicFont)
-
-  useEffect(() => {
-    applyDocumentSettings({ theme, arabicFont })
-  }, [theme, arabicFont])
+  useAppliedSettings()
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

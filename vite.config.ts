@@ -38,7 +38,15 @@ export default defineConfig({
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'diwanekiram-data',
-              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              /* Le catalogue compte 558 fichiers JSON pour 277 œuvres (texte,
+                 traduction éventuelle, index), 6,3 Mo au total. La limite
+                 précédente, 200, était atteinte après quelques œuvres : le
+                 cache évacuait sans cesse et la moitié du catalogue demeurait
+                 indisponible hors ligne. 1200 laisse le catalogue entier
+                 tenir en cache, très au-dessus de la valeur par défaut de
+                 Workbox (60), pour que la lecture hors ligne soit complète
+                 plutôt que partiellement servie. */
+              expiration: { maxEntries: 1200, maxAgeSeconds: 60 * 60 * 24 * 90 },
             },
           },
           {

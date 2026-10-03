@@ -56,9 +56,22 @@ function VerseBlock({
       </span>
 
       {showArabic ? (
-        <p className={`verse-arabic verse-arabic--${font}`} lang="ar" dir="rtl">
-          {verse.ar}
-        </p>
+        verse.sadr || verse.adj ? (
+          /* Deux hémistiches sur deux colonnes : le vers garde sa forme
+             d'origine. `ar` reste la source de vérité pour les autres usages. */
+          <p
+            className={`verse-arabic verse-arabic--couplet verse-arabic--${font}`}
+            lang="ar"
+            dir="rtl"
+          >
+            {verse.sadr ? <span className="verse-couplet">{verse.sadr}</span> : null}
+            {verse.adj ? <span className="verse-couplet">{verse.adj}</span> : null}
+          </p>
+        ) : (
+          <p className={`verse-arabic verse-arabic--${font}`} lang="ar" dir="rtl">
+            {verse.ar}
+          </p>
+        )
       ) : null}
 
       {showTranscription ? (

@@ -1,7 +1,6 @@
 /* Carte de xassida — utilisée par l'accueil, la bibliothèque et les favoris. */
 
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import { Heart, Layers } from 'lucide-react'
 import type { Author, Xassida } from '../../types/domain'
 import { TiltCard } from '../motion/TiltCard'
@@ -14,18 +13,14 @@ interface XassidaCardProps {
   index?: number
 }
 
-export function XassidaCard({ xassida, author, index = 0 }: XassidaCardProps) {
+export function XassidaCard({ xassida, author }: XassidaCardProps) {
   const isFavorite = useLibrary((state) => state.favorites.includes(xassida.slug))
   const progress = useLibrary((state) => state.progress[xassida.slug])
   const toggleFavorite = useLibrary((state) => state.toggleFavorite)
   const percent = Math.round(xassida.translatedRatio * 100)
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.42, delay: Math.min(index, 8) * 0.035, ease: [0.16, 1, 0.3, 1] }}
-    >
+    <div>
       <TiltCard className="xcard">
         <Link to={`/xassida/${xassida.slug}`} className="xcard-body">
           <header className="xcard-head">
@@ -52,7 +47,7 @@ export function XassidaCard({ xassida, author, index = 0 }: XassidaCardProps) {
 
           {progress ? (
             <Badge tone="mint">En cours de lecture</Badge>
-          ) : xassida.translatedRatio === 1 ? (
+          ) : xassida.translatedCount >= xassida.verseCount ? (
             <Badge tone="cyan">Traduction complète</Badge>
           ) : (
             <Badge tone="warn" title="Certains versets n'ont pas encore de traduction">
@@ -71,6 +66,6 @@ export function XassidaCard({ xassida, author, index = 0 }: XassidaCardProps) {
           <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
         </button>
       </TiltCard>
-    </motion.div>
+    </div>
   )
 }

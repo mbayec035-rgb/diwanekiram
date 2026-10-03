@@ -39,7 +39,8 @@ export function useReadingProgress(ids: string[], enabled: boolean) {
   const scrollTo = useCallback((id: string) => {
     const container = containerRef.current
     const element = container?.querySelector<HTMLElement>(`[data-verse-id="${CSS.escape(id)}"]`)
-    element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+    element?.scrollIntoView({ behavior, block: 'center' })
     setActiveId(id)
   }, [])
 

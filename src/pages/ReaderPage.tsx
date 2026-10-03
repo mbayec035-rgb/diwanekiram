@@ -5,7 +5,9 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import {
   ChevronLeft,
   ChevronRight,
+  GraduationCap,
   Heart,
+  HelpCircle,
   Languages,
   Layers,
   ScrollText,
@@ -13,7 +15,6 @@ import {
   Type,
   X,
 } from 'lucide-react'
-import { AnimatePresence, motion } from 'framer-motion'
 import type { ReactNode, RefObject } from 'react'
 import { useAsync } from '../hooks/useAsync'
 import { fetchTranslations, fetchVerses, loadCatalog } from '../services/library'
@@ -151,6 +152,15 @@ export function ReaderPage() {
   const currentChapter = currentIndex >= 0 ? visible[currentIndex].chapter.n : null
   const translatedPercent = Math.round(xassida.translatedRatio * 100)
 
+  /* Le mètre, la rive et le thème n'existent que chez les sources qui les
+     donnent : les 63 œuvres déjà publiées n'en ont aucune, leur absence
+     doit rester invisible plutôt que d'afficher trois placeholders. */
+  const poetry = [
+    { key: 'meter', label: 'Mètre', value: xassida.meter },
+    { key: 'rhyme', label: 'Rive', value: xassida.rhyme },
+    { key: 'category', label: 'Thème', value: xassida.category },
+  ].filter((entry) => Boolean(entry.value?.nameAr))
+
   return (
     <div className="reader">
       <aside className="reader-toc" aria-label="Chapitres">
@@ -202,6 +212,21 @@ export function ReaderPage() {
                 Traduction {translatedPercent} %
               </Badge>
             </div>
+            {poetry.length > 0 && (
+              <dl className="reader-poetry">
+                {poetry.map((entry) => (
+                  <div key={entry.key} className="reader-poetry-item">
+                    <dt>{entry.label}</dt>
+                    <dd>
+                      <span lang="ar" dir="rtl">
+                        {entry.value?.nameAr}
+                      </span>
+                      {entry.value?.name ? <span> · {entry.value.name}</span> : null}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
           </div>
 
           <button
@@ -250,16 +275,30 @@ export function ReaderPage() {
           </div>
         </div>
 
-        <AnimatePresence>
-          {displayOpen ? (
-            <motion.div
+        <div className="toolbar-group toolbar-group--practice">
+          <Link
+            className="button button--ghost button--sm"
+            to={`/apprentissage/${slug}`}
+            title="Apprendre cette xassida vers par vers"
+          >
+            <GraduationCap size={15} />
+            <span>Apprendre</span>
+          </Link>
+          <Link
+            className="button button--ghost button--sm"
+            to={`/quiz?xassida=${slug}`}
+            title="Quiz sur cette xassida"
+          >
+            <HelpCircle size={15} />
+            <span>Quiz</span>
+          </Link>
+        </div>
+
+        {displayOpen ? (
+            <div
               className="display-panel"
               role="dialog"
               aria-label="Réglages d’affichage"
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="display-panel-head">
                 <p className="display-panel-title">
@@ -320,9 +359,8 @@ export function ReaderPage() {
                   </button>
                 ))}
               </div>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
+            </div>
+        ) : null}
         </div>
 
         {versesError ? <ErrorState message={versesError.message} /> : null}

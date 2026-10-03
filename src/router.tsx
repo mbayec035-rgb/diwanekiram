@@ -14,6 +14,8 @@ const FavoritesPage = lazy(() =>
 )
 const AuthorsPage = lazy(() => import('./pages/AuthorsPage').then((m) => ({ default: m.AuthorsPage })))
 const AuthorPage = lazy(() => import('./pages/AuthorPage').then((m) => ({ default: m.AuthorPage })))
+const StudyPage = lazy(() => import('./pages/StudyPage').then((m) => ({ default: m.StudyPage })))
+const QuizPage = lazy(() => import('./pages/QuizPage').then((m) => ({ default: m.QuizPage })))
 const AboutPage = lazy(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })))
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })))
@@ -50,6 +52,8 @@ export const router = createBrowserRouter([
       { index: true, element: withSuspense(<HomePage />) },
       { path: 'bibliotheque', element: withSuspense(<LibraryPage />) },
       { path: 'xassida/:slug', element: withSuspense(<ReaderPage />) },
+      { path: 'apprentissage/:slug', element: withSuspense(<StudyPage />) },
+      { path: 'quiz', element: withSuspense(<QuizPage />) },
       { path: 'favoris', element: withSuspense(<FavoritesPage />) },
       { path: 'auteurs', element: withSuspense(<AuthorsPage />) },
       { path: 'auteurs/:slug', element: withSuspense(<AuthorPage />) },

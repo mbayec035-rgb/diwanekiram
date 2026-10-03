@@ -12,11 +12,19 @@ export interface Author {
   tarihaLabel: string
   anonymous: boolean
   bio: string
-  bioSource: 'catalogue' | 'diwanekiram' | 'none'
+  bioSource: 'catalogue' | 'diwanekiram' | 'local' | 'none'
   picture: string | null
   xassidaCount: number
   verseCount: number
   slugs: string[]
+}
+
+/** Étiquette poétique (mètre, rive, thème) : présente seulement chez les
+    sources qui la fournissent. Le nom arabe est toujours renseigné ; la
+    translittération dépend de la source. */
+export interface PoeticLabel {
+  nameAr: string
+  name: string
 }
 
 export interface Xassida {
@@ -31,6 +39,9 @@ export interface Xassida {
   translatedCount: number
   translatedRatio: number
   hasAudio: boolean
+  meter?: PoeticLabel
+  rhyme?: PoeticLabel
+  category?: PoeticLabel
 }
 
 export interface Verse {
@@ -38,6 +49,9 @@ export interface Verse {
   n: number
   ar: string
   tr: string
+  /** Les deux hémistiches, quand la source distingue le vers. */
+  sadr?: string
+  adj?: string
 }
 
 export interface Chapter {

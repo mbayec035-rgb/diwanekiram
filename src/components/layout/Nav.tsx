@@ -1,7 +1,6 @@
 /* Navigation latérale (bureau) et barre basse (mobile). */
 
 import { NavLink } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import { NAV_ENTRIES } from './navItems'
 
 export function SideNav() {
@@ -14,11 +13,7 @@ export function SideNav() {
               {({ isActive }) => (
                 <>
                   {isActive && (
-                    <motion.span
-                      layoutId="sidenav-active"
-                      className="sidenav-marker"
-                      transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                    />
+                    <span className="sidenav-marker" />
                   )}
                   <entry.icon size={19} aria-hidden="true" />
                   <span>{entry.label}</span>
@@ -42,11 +37,7 @@ export function MobileTabBar() {
               {({ isActive }) => (
                 <>
                   {isActive && (
-                    <motion.span
-                      layoutId="tabbar-active"
-                      className="tabbar-dot"
-                      transition={{ type: 'spring', stiffness: 420, damping: 30 }}
-                    />
+                    <span className="tabbar-dot" />
                   )}
                   <entry.icon size={20} aria-hidden="true" />
                   <span>{entry.short}</span>

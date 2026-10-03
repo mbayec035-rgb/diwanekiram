@@ -2,13 +2,12 @@
 
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import {
   ArrowRight,
-  Sparkles,
-  WifiOff,
-  Type,
-  SlidersHorizontal,
+  GraduationCap,
+  HelpCircle,
+  Layers,
+  ListChecks,
   BookHeart,
   Quote,
   BookOpen,
@@ -21,26 +20,23 @@ import { TiltCard } from '../components/motion/TiltCard'
 import { XassidaCard } from '../components/library/XassidaCard'
 import { Avatar, Badge, ErrorState, Skeleton } from '../components/ui/Bits'
 
-const FEATURES = [
+const PRACTICE = (corpusSize: number | null) => [
   {
-    icon: Sparkles,
-    title: 'Un catalogue complet',
-    body: "L'intégralité des xassidas du corpus, chapters et versets compris, consultable entièrement hors ligne.",
+    icon: ListChecks,
+    title: 'Apprentissage vers par vers',
+    body: 'Parcourez le texte un verset à la fois, avec la transcription et la traduction masquées pour tester votre mémorisation.',
   },
   {
-    icon: Type,
-    title: 'Trois couches de lecture',
-    body: 'Texte arabe vocalisé, transcription latine et traduction française, activables séparément.',
+    icon: HelpCircle,
+    title: 'Deux modes de quiz',
+    body: corpusSize
+      ? `Complétez la fin d'un verset ou devinez l'œuvre dont il provient, sur les ${corpusSize} xassidas du corpus.`
+      : "Complétez la fin d'un verset ou devinez l'œuvre dont il provient.",
   },
   {
-    icon: SlidersHorizontal,
-    title: 'Confort de lecture',
-    body: 'Police et taille réglables couche par couche, reprise exacte au dernier verset lu.',
-  },
-  {
-    icon: WifiOff,
-    title: 'Application installable',
-    body: 'Le catalogue est mis en cache : la lecture reste possible sans connexion.',
+    icon: Layers,
+    title: 'Aides réglables',
+    body: 'Les couches d’aide restent celles de la lecture : arabe, transcription et traduction, activables séparément.',
   },
 ]
 
@@ -67,6 +63,17 @@ export function HomePage() {
     return index
   }, [catalog])
 
+  /* Quelques œuvres proposées pour démarrer immédiatement un parcours. */
+  const practiceTargets = (catalog?.xassidas ?? [])
+    .slice()
+    .sort((a, b) => b.verseCount - a.verseCount || a.name.localeCompare(b.name, 'fr'))
+    .slice(0, 5)
+    .map((item) => ({
+      slug: item.slug,
+      name: item.name,
+      authorName: catalog?.authorsById.get(item.authorId)?.name ?? 'Auteur inconnu',
+    }))
+
   const resumeXassida = catalog?.xassidas.find((item) => item.slug === resumeSlug)
   const resumeVerseId = resumeSlug ? progress[resumeSlug]?.verseId : undefined
   const resume = resumeXassida
@@ -80,52 +87,25 @@ export function HomePage() {
   return (
     <div className="page-stack">
       <section className="hero">
-        <motion.p
-          className="eyebrow"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        <p className="eyebrow">
           <span className="eyebrow-dot" aria-hidden="true" />
           Bibliothèque de poésie dévotionnelle
-        </motion.p>
+        </p>
 
-        <motion.h1
-          className="hero-title"
-          initial={{ opacity: 0, y: 22, filter: 'blur(10px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
-        >
+        <h1 className="hero-title">
           Diwane<span className="text-grad">Kiram</span>
-        </motion.h1>
+        </h1>
 
-        <motion.p
-          className="hero-arabic"
-          lang="ar"
-          dir="rtl"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.9, delay: 0.2 }}
-        >
+        <p className="hero-arabic" lang="ar" dir="rtl">
           ديوان كرام
-        </motion.p>
+        </p>
 
-        <motion.p
-          className="hero-sub"
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.24 }}
-        >
+        <p className="hero-sub">
           Lisez et annotez vos xassidas favorites en arabe vocalisé, en transcription et en traduction
           française, même sans connexion.
-        </motion.p>
+        </p>
 
-        <motion.div
-          className="hero-actions"
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.32 }}
-        >
+        <div className="hero-actions">
           <Link className="button button--primary button--lg" to="/bibliotheque">
             Commencer à lire
             <ArrowRight size={18} />
@@ -133,7 +113,7 @@ export function HomePage() {
           <Link className="button button--ghost button--lg" to="/auteurs">
             Découvrir les auteurs
           </Link>
-        </motion.div>
+        </div>
       </section>
 
       {error ? <ErrorState message={error.message} onRetry={reload} /> : null}
@@ -259,26 +239,55 @@ export function HomePage() {
       </Reveal>
 
       <Reveal className="section">
-        <section className="features">
+        <section className="practice">
           <header className="section-head">
             <div>
-              <p className="eyebrow">Pourquoi DiwaneKiram</p>
-              <h2>Une expérience de lecture complète</h2>
+              <p className="eyebrow">Apprendre et mémoriser</p>
+              <h2>Étudiez le corpus vers par vers</h2>
             </div>
           </header>
+
           <Stagger className="grid grid--features">
-            {FEATURES.map((feature) => (
-              <StaggerItem key={feature.title}>
+            {PRACTICE(catalog?.manifest.totals.xassidas ?? null).map((entry) => (
+              <StaggerItem key={entry.title}>
                 <TiltCard className="feature">
                   <span className="feature-icon">
-                    <feature.icon size={20} />
+                    <entry.icon size={20} />
                   </span>
-                  <h3>{feature.title}</h3>
-                  <p>{feature.body}</p>
+                  <h3>{entry.title}</h3>
+                  <p>{entry.body}</p>
                 </TiltCard>
               </StaggerItem>
             ))}
           </Stagger>
+
+          {practiceTargets.length > 0 ? (
+            <div className="practice-links">
+              <p className="practice-links-label">Choisir une œuvre à pratiquer</p>
+              <ul>
+                {practiceTargets.map((item) => (
+                  <li key={item.slug}>
+                    <Link className="practice-link" to={`/apprentissage/${item.slug}`}>
+                      <GraduationCap size={15} aria-hidden="true" />
+                      <span>
+                        <strong>{item.name}</strong>
+                        <small>{item.authorName}</small>
+                      </span>
+                      <ArrowRight size={15} aria-hidden="true" />
+                    </Link>
+                    <Link
+                      className="practice-link practice-link--quiz"
+                      to={`/quiz?xassida=${item.slug}`}
+                      title={`Quiz sur ${item.name}`}
+                      aria-label={`Quiz sur ${item.name}`}
+                    >
+                      <HelpCircle size={15} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </section>
       </Reveal>
 

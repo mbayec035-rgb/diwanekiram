@@ -1,5 +1,6 @@
 /* Préférences de lecture — persistées dans localStorage. */
 
+import { useEffect } from 'react'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { ArabicFont, ThemePreference, TranslationLang } from '../types/domain'
@@ -107,20 +108,43 @@ export const useSettings = create<SettingsState>()(
   ),
 )
 
+const LIGHT_QUERY = '(prefers-color-scheme: light)'
+
+/** Résout la préférence de thème en thème concret. */
+export function resolveTheme(theme: ThemePreference): 'dark' | 'light' {
+  if (theme !== 'system') return theme
+  if (typeof window === 'undefined') return 'dark'
+  return window.matchMedia(LIGHT_QUERY).matches ? 'light' : 'dark'
+}
+
 /** Applique le thème et les préférences typographiques au document. */
 export function applyDocumentSettings(state: Pick<SettingsState, 'theme' | 'arabicFont'>) {
   if (typeof document === 'undefined') return
 
-  const resolved =
-    state.theme === 'system'
-      ? window.matchMedia('(prefers-color-scheme: light)').matches
-        ? 'light'
-        : 'dark'
-      : state.theme
+  const resolved = resolveTheme(state.theme)
 
   document.documentElement.dataset.theme = resolved
   document.documentElement.dataset.font = state.arabicFont
   document
     .querySelector('meta[name="theme-color"]')
     ?.setAttribute('content', resolved === 'light' ? '#eef4f7' : '#05070a')
+}
+
+/**
+ * Application unique des préférences au document. En thème « Système »,
+ * l'écoute de la média query suit les changements de l'OS en direct.
+ */
+export function useAppliedSettings() {
+  const theme = useSettings((state) => state.theme)
+  const arabicFont = useSettings((state) => state.arabicFont)
+
+  useEffect(() => {
+    applyDocumentSettings({ theme, arabicFont })
+    if (theme !== 'system' || typeof window === 'undefined') return
+
+    const media = window.matchMedia(LIGHT_QUERY)
+    const onChange = () => applyDocumentSettings({ theme: 'system', arabicFont })
+    media.addEventListener('change', onChange)
+    return () => media.removeEventListener('change', onChange)
+  }, [theme, arabicFont])
 }

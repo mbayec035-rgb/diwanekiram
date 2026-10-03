@@ -57,16 +57,16 @@ export function AboutPage() {
       <Reveal className="section">
         <dl className="hero-stats hero-stats--centered">
           {[
-            { label: 'Xassidas', value: totals?.xassidas ?? 63 },
-            { label: 'Chapitres', value: totals?.chapters ?? 105 },
-            { label: 'Versets', value: totals?.verses ?? 3788 },
-            { label: 'Auteurs', value: totals?.authors ?? 9 },
-            { label: 'Traductions', value: totals?.translations ?? 1391 },
+            { label: 'Xassidas', value: totals?.xassidas },
+            { label: 'Chapitres', value: totals?.chapters },
+            { label: 'Versets', value: totals?.verses },
+            { label: 'Auteurs', value: totals?.authors },
+            { label: 'Traductions', value: totals?.translations },
           ].map((stat) => (
             <div key={stat.label} className="hero-stat">
               <dt>{stat.label}</dt>
               <dd>
-                <CountUpText value={stat.value} />
+                <CountUpText value={stat.value ?? 0} />
               </dd>
             </div>
           ))}

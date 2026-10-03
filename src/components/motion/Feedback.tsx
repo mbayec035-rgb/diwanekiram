@@ -1,9 +1,8 @@
-/* Chiffre animé au scroll + transition de page + barre de progression. */
+/* Valeurs immédiates, fondu de page et barre de progression. */
 
-import { AnimatePresence, motion, useReducedMotion, useScroll } from 'framer-motion'
+import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import type { ReactNode } from 'react'
-import { useCountUp } from '../../hooks/useMisc'
 
 export function CountUpText({
   value,
@@ -14,10 +13,9 @@ export function CountUpText({
   suffix?: string
   className?: string
 }) {
-  const [ref, current] = useCountUp(value)
   return (
-    <span ref={ref} className={className}>
-      {current.toLocaleString('fr-FR')}
+    <span className={className}>
+      {value.toLocaleString('fr-FR')}
       {suffix}
     </span>
   )
@@ -25,28 +23,27 @@ export function CountUpText({
 
 export function PageTransition({ children }: { children: ReactNode }) {
   const location = useLocation()
-  const reduced = useReducedMotion()
-
-  if (reduced) return <div className="page">{children}</div>
-
-  return (
-    <AnimatePresence mode="wait" initial={false}>
-      <motion.div
-        key={location.pathname}
-        className="page"
-        initial={{ opacity: 0, y: 14, filter: 'blur(7px)' }}
-        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-        exit={{ opacity: 0, y: -10, filter: 'blur(5px)' }}
-        transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
-  )
+  return <div key={location.pathname} className="page page-route">{children}</div>
 }
 
 export function ScrollProgress() {
-  const { scrollYProgress } = useScroll()
+  const ref = useRef<HTMLDivElement | null>(null)
 
-  return <motion.div className="scroll-progress" style={{ scaleX: scrollYProgress }} aria-hidden="true" />
+  useEffect(() => {
+    const update = () => {
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight
+      const progress = scrollable > 0 ? window.scrollY / scrollable : 0
+      if (ref.current) ref.current.style.transform = `scaleX(${progress})`
+    }
+
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [])
+
+  return <div ref={ref} className="scroll-progress" aria-hidden="true" />
 }

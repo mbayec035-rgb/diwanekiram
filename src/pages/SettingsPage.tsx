@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Download, Monitor, Moon, RotateCcw, Sun, Trash2 } from 'lucide-react'
-import { useSettings, applyDocumentSettings, SCALE_LIMITS } from '../store/useSettings'
+import { useSettings, useAppliedSettings, resolveTheme, SCALE_LIMITS } from '../store/useSettings'
 import { useLibrary } from '../store/useLibrary'
 import { Button } from '../components/ui/Button'
 import { Reveal } from '../components/motion/Reveal'
@@ -15,6 +15,7 @@ interface InstallPromptEvent extends Event {
 
 export function SettingsPage() {
   const settings = useSettings()
+  const resolvedTheme = resolveTheme(settings.theme)
   const favorites = useLibrary((state) => state.favorites)
   const history = useLibrary((state) => state.history)
   const progress = useLibrary((state) => state.progress)
@@ -41,9 +42,7 @@ export function SettingsPage() {
     }
   }, [])
 
-  useEffect(() => {
-    applyDocumentSettings(useSettings.getState())
-  }, [settings.theme, settings.arabicFont])
+  useAppliedSettings()
 
   return (
     <div className="page-stack">
@@ -62,7 +61,13 @@ export function SettingsPage() {
           <h2>Apparence</h2>
 
           <div className="field">
-            <span className="field-label">Thème</span>
+            <span className="field-label">
+              Thème
+              <span className="field-hint">
+                Appliqué : {resolvedTheme === 'light' ? 'Jour' : 'Nuit'}
+                {settings.theme === 'system' ? ' (suivi du système)' : ''}
+              </span>
+            </span>
             <div className="segmented">
               {(
                 [

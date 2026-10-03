@@ -37,8 +37,8 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --dur-fast: 0.16s;
-  --dur-base: 0.28s;
-  --dur-slow: 0.55s;
+  --dur-base: 0.2s;
+  --dur-slow: 0.2s;
 
   /* ---- Mise en page ---- */
   --sidebar-w: 15.5rem;
