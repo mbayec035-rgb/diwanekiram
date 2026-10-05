@@ -715,6 +715,15 @@
   min-width: 0;
 }
 
+/* Même raison pour les auteurs : en grille, le <li> est l'élément de la
+   grille, il doit transmettre sa hauteur à la carte, sinon celle-ci se règle
+   sur son contenu et les cartes d'une même rangée ont des hauteurs
+   différentes selon la longueur de la notice. */
+.view-stack.grid > li {
+  display: grid;
+  min-width: 0;
+}
+
 @media (min-width: 640px) {
   .view-stack.grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
