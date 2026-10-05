@@ -13,7 +13,11 @@ import { Badge, ErrorState, Skeleton } from '../components/ui/Bits'
 import { DisplayRail } from '../components/reader/DisplayRail'
 import { ChapterDrawer, ChapterRailButton } from '../components/reader/ChapterNav'
 import { ChapterFooterNav, ChapterStepper } from '../components/reader/ChapterStepper'
+import { SearchBar } from '../components/reader/SearchBar'
+import type { SearchResult } from '../components/reader/SearchBar'
+import { SearchRailButton } from '../components/reader/SearchRailButton'
 import { MemoVerseBlock } from '../components/reader/VerseBlock'
+import { buildTextIndex, excerptAround, layerWithMatch, searchIndex } from '../services/textSearch'
 import type { Chapter, Verse } from '../types/domain'
 
 interface FlatVerse {
@@ -50,11 +54,12 @@ export function ReaderPage() {
      tranche, et elle n'a lieu qu'une fois le document arrivé. */
   const [choisi, setChoisi] = useState<number | null>(null)
   const [slugAffichage, setSlugAffichage] = useState(slug)
-  /* Un seul panneau à la fois : le sommaire et les réglages d'affichage
-     occupent la même zone du rail, ils ne peuvent pas se recouvrir. */
-  const [panneau, setPanneau] = useState<'sommaire' | 'affichage' | null>(null)
+  /* Un seul panneau à la fois : le sommaire, la recherche et les réglages
+     d'isplay occupent la même zone du rail, ils ne peuvent pas se recouvrir. */
+  const [panneau, setPanneau] = useState<'sommaire' | 'affichage' | 'recherche' | null>(null)
   const sommaireOpen = panneau === 'sommaire'
   const affichageOpen = panneau === 'affichage'
+  const rechercheOpen = panneau === 'recherche'
   const setSommaireOpen = useCallback(
     (open: boolean | ((previous: boolean) => boolean)) =>
       setPanneau((previous) => {
@@ -181,6 +186,115 @@ export function ReaderPage() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [ids, activeId, scrollTo, sommaireOpen])
 
+  /* ---- Recherche dans le texte ---- */
+
+  const [requete, setRequete] = useState('')
+  const [resultatActif, setResultatActif] = useState(0)
+  /* Vers vers lequel l'utilisateur a navigué, en attente du bon chapitre. */
+  const [verseCible, setVerseCible] = useState<string | null>(null)
+  const boutonRecherche = useRef<HTMLButtonElement | null>(null)
+
+  /* L'index ne porte que sur les colonnes affichées, et se reconstruit
+     seulement quand elles changent : la normalisation se fait ici, une fois,
+     jamais à la frappe. */
+  const indexTexte = useMemo(
+    () =>
+      buildTextIndex(
+        flat.map((entry) => ({ verse: entry.verse, chapterN: entry.chapter.n })),
+        translations?.verses,
+        {
+          arabic: settings.showArabic,
+          transcription: settings.showTranscription,
+          translation: settings.showTranslation,
+        },
+      ),
+    [flat, translations, settings.showArabic, settings.showTranscription, settings.showTranslation],
+  )
+
+  /* Une requête qui survit au changement de colonnes chercherait dans un texte
+     qui n'est plus affiché : la signature oblige la barre à repartir vide. */
+  const cleIndexTexte = `${flat.length}:${settings.showArabic}:${settings.showTranscription}:${settings.showTranslation}`
+
+  const resultats = useMemo<SearchResult[]>(() => {
+    const trouve = searchIndex(indexTexte, requete)
+    return trouve.map((i) => {
+      const entry = indexTexte.entries[i]
+      const couche = layerWithMatch(entry.layers, requete)
+      return {
+        entry,
+        excerpt: couche ? excerptAround(couche.text, requete) : '',
+      }
+    })
+  }, [indexTexte, requete])
+
+  /* Une nouvelle requête repart du premier résultat. */
+  const cleResultats = `${requete}:${resultats.length}`
+  const [cleVue, setCleVue] = useState(cleResultats)
+  if (cleVue !== cleResultats) {
+    setCleVue(cleResultats)
+    if (resultatActif !== 0) setResultatActif(0)
+  }
+
+  const resultat = resultats[resultatActif] ?? null
+
+  /* Ctrl+F / Cmd+F : on prend la place du navigateur, mais seulement ici, et
+     seulement si aucun dialogue ne capte déjà la frappe. */
+  useEffect(() => {
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== 'f' && event.key !== 'F') return
+      if (!event.ctrlKey && !event.metaKey) return
+      /* Le champ de la recherche a déjà le focus : ne pas lui voler. */
+      const target = event.target as HTMLElement | null
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return
+
+      event.preventDefault()
+      setPanneau('recherche')
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  const fermerRecherche = useCallback(() => {
+    setPanneau(null)
+    boutonRecherche.current?.focus()
+  }, [])
+
+  /* Le résultat actif n'existe plus après un changement de requête : le
+     rappel ci-dessus le remet à zéro, inutile de défiler sur un résultat
+     disparu. */
+
+  /* Aller au résultat : c'est le lecteur qui décide du chapitre, la barre ne
+     fait que dire où l'utilisateur veut aller. Une frappe ne déplace rien —
+     seulement une navigation explicite (flèches, Entrée, liste). */
+  const allerAuResultat = useCallback(
+    (verseId: string) => {
+      const cible = flat.find((entry) => entry.verse.id === verseId)
+      if (!cible) return
+      setVerseCible(verseId)
+      if (cible.chapter.n !== chapter) changeChapter(cible.chapter.n)
+    },
+    [flat, chapter, changeChapter],
+  )
+
+  /* Le défilement attend que le vers soit à l'écran : un résultat d'un autre
+     chapitre n'existe pas dans le DOM tant que le chapitre n'a pas changé. */
+  useEffect(() => {
+    if (!verseCible) return
+    if (!flat.some((entry) => entry.verse.id === verseCible && entry.chapter.n === chapter)) return
+    scrollTo(verseCible)
+    setVerseCible(null)
+  }, [verseCible, chapter, flat, scrollTo])
+
+  /* L'occurrence mise en avant : la première de la couche où le mot a été
+     trouvé, dans le chapitre affiché seulement. */
+  const matchActif = useMemo(() => {
+    if (!resultat || !requete) return null
+    if (resultat.entry.chapterN !== chapter) return null
+    const couche = layerWithMatch(resultat.entry.layers, requete)
+    return couche ? `${couche.layer}:0` : null
+  }, [resultat, requete, chapter])
+
   if (catalogError) return <ErrorState message={catalogError.message} onRetry={reload} />
 
   if (!catalog || !xassida || !item) {
@@ -262,6 +376,11 @@ export function ReaderPage() {
             open={sommaireOpen}
             onToggle={() => setSommaireOpen((open) => !open)}
           />
+          <SearchRailButton
+            ref={boutonRecherche}
+            open={rechercheOpen}
+            onToggle={() => setPanneau(rechercheOpen ? null : 'recherche')}
+          />
           <ChapterDrawer
             chapters={chapters}
             chapter={chapter}
@@ -281,6 +400,20 @@ export function ReaderPage() {
           onPrev={() => changeChapter(chapter - 1)}
           onNext={() => changeChapter(chapter + 1)}
           onOpenSummary={() => setSommaireOpen(true)}
+        />
+
+        {/* La recherche se colle sous l'en-tête de l'œuvre : le texte passe
+            dessous, il ne saute pas. */}
+        <SearchBar
+          open={rechercheOpen}
+          cle={cleIndexTexte}
+          results={resultats}
+          active={resultatActif}
+          query={requete}
+          onQueryChange={setRequete}
+          onActiveChange={setResultatActif}
+          onClose={fermerRecherche}
+          onGoToVerse={allerAuResultat}
         />
 
         <div className="reader-scroll" ref={containerRef as RefObject<HTMLDivElement>}>
@@ -306,6 +439,8 @@ export function ReaderPage() {
                   transcriptionScale={settings.transcriptionScale}
                   translationScale={settings.translationScale}
                   font={settings.arabicFont}
+                  query={requete}
+                  activeMatchId={matchActif}
                 />
               </div>
             ))

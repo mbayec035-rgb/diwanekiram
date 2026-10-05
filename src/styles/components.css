@@ -2114,6 +2114,234 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------------- Recherche dans le texte ---------------- */
+
+/* Accent propre à la recherche : elle ne règle rien, elle ne lit rien non
+   plus — elle se distingue des deux autres boutons du rail. */
+.rail-button--search {
+  --rail-accent: var(--amber);
+}
+
+.searchbar-ring {
+  /* Collée au flux du lecteur, pas du document : elle reste visible pendant
+     que le texte défile dessous. */
+  position: sticky;
+  top: calc(var(--topbar-h) + var(--space-2));
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-bottom: var(--space-3);
+  background: linear-gradient(to bottom, var(--bg) 72%, transparent);
+  animation: searchbar-in 200ms ease-out both;
+}
+
+@keyframes searchbar-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+}
+
+/* La fermeture laisse la barre remonter, sinon le texte d'en dessous
+     sauterait d'un coup. */
+.searchbar-ring[data-phase='closing'] {
+  animation: searchbar-out 180ms ease-in both;
+  pointer-events: none;
+}
+
+@keyframes searchbar-out {
+  to {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+}
+
+.searchbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.45rem 0.5rem 0.45rem var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-solid);
+  box-shadow: var(--shadow-2);
+}
+
+.searchbar-icon {
+  flex: none;
+  color: var(--cyan);
+}
+
+.searchbar-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--step--1);
+  padding: 0.3rem 0;
+}
+
+.searchbar-input:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.searchbar-count {
+  flex: none;
+  min-width: 5.5rem;
+  text-align: right;
+  font-size: var(--step--1);
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.searchbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex: none;
+}
+
+/* Le texte trouvé reste du texte : on le teinte, on ne le souligne pas comme
+   un lien. */
+.verse-mark {
+  background: color-mix(in srgb, var(--cyan) 26%, transparent);
+  color: var(--text);
+  border-radius: 0.2em;
+  padding: 0 0.06em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.verse-mark.is-active {
+  background: var(--cyan);
+  color: var(--surface-solid);
+}
+
+/* ---------------- Liste des résultats ---------------- */
+
+.search-results {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-solid);
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+
+.search-results-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 0.5rem var(--space-2) 0.5rem var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.search-results-title {
+  font-size: var(--step--1);
+  color: var(--text-dim);
+}
+
+.search-results-list {
+  list-style: none;
+  max-height: min(19rem, 42dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.search-result {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+}
+
+.search-result:last-child {
+  border-bottom: 0;
+}
+
+.search-result:hover {
+  background: color-mix(in srgb, var(--cyan) 10%, transparent);
+}
+
+.search-result:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: -2px;
+}
+
+.search-result.is-active {
+  background: color-mix(in srgb, var(--cyan) 16%, transparent);
+}
+
+.search-result-ref {
+  flex: none;
+  min-width: 3rem;
+  font-size: var(--step--1);
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+}
+
+.search-result-excerpt {
+  min-width: 0;
+  font-size: var(--step--1);
+  color: var(--text-soft);
+}
+
+@media (max-width: 640px) {
+  /* Barre pleine largeur, et la liste devient une feuille qui remonte du bas :
+     elle ne recouvre jamais le champ ni le compteur. */
+  .searchbar-ring {
+    top: calc(var(--topbar-h) + var(--space-1));
+    margin-inline: calc(var(--space-4) * -1);
+    padding-inline: var(--space-4);
+  }
+
+  .searchbar {
+    border-radius: var(--radius-lg);
+  }
+
+  .searchbar-count {
+    min-width: 4.5rem;
+  }
+
+  .search-results {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 48;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    animation: search-sheet-in 200ms ease-out both;
+    box-shadow: var(--shadow-3);
+  }
+
+  @keyframes search-sheet-in {
+    from {
+      transform: translateY(100%);
+    }
+  }
+
+  .search-results-list {
+    max-height: 56dvh;
+  }
+
+  /* Les résultats restent à portée de pouce, les deux grands. */
+  .search-result {
+    padding: var(--space-3);
+  }
+}
+
 .reader-scroll {
   display: flex;
   flex-direction: column;
