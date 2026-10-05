@@ -141,6 +141,7 @@ async function loadLocalCatalogue() {
       bio: clean(raw.bio ?? ''),
       bioSource: clean(raw.source ?? '') ? 'local' : 'none',
       picture: raw.picture ? resolveLocalPortrait(raw.picture, PORTRAIT_DIR) : null,
+      photoSource: raw.photoSource ?? null,
     })
     stats.authors += 1
   }

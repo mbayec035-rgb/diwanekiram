@@ -1016,6 +1016,7 @@
 
 .avatar {
   flex: none;
+  position: relative;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -1031,15 +1032,57 @@
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.04);
 }
 
+/* Le monogramme reste sous la photo : il remplit le disque pendant le
+   chargement et sert de repli si le fichier manque. */
+.avatar-initials {
+  grid-area: 1 / 1;
+  line-height: 1;
+}
+
 .avatar img {
+  grid-area: 1 / 1;
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  /* Le dégradé du monogramme s'estompe dès que la photo apparaît, sans
+     transition de couleur coûteuse sur une image. */
+  opacity: 0;
+  animation: avatar-photo-in 260ms ease-out forwards;
+}
+
+@keyframes avatar-photo-in {
+  to {
+    opacity: 1;
+  }
+}
+
+/* En chargement paresseux, une image pas encore téléchargée laisserait un
+   disque uni ; on garde un voile très léger sur la photo pendant l'arrivée. */
+.avatar--photo {
+  background: color-mix(in srgb, var(--surface-2) 92%, #12253a);
 }
 
 .avatar--sm {
   font-size: 0.72rem;
+}
+
+/* Provenance du portrait, sous la notice : présente sans se lire à voix haute
+   comme un élément de contenu. */
+.author-credit {
+  font-size: var(--step--1);
+  color: var(--text-faint);
+}
+
+.author-credit a {
+  color: var(--text-dim);
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 0.2em;
+}
+
+.author-credit a:hover,
+.author-credit a:focus-visible {
+  color: var(--cyan);
 }
 
 .acard-identity {

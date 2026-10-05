@@ -3,5 +3,15 @@
   "nameAr": "الشَّيْخُ السَّيِّدُ عَلِيُّ غَيْ",
   "tariha": "tidjan",
   "source": "https://markazulfuhum.app/authors/19",
-  "license": "Domaine public"
+  "license": "Domaine public",
+  "picture": "authors/serigne-alioune-gueye.webp",
+  "photoSource": {
+    "provider": "markazulfuhum",
+    "page": "https://markazulfuhum.app/authors/19",
+    "file": "https://markazulfuhum.app/media/author_photos/IMG_3296.JPG",
+    "author": null,
+    "license": null,
+    "note": "Licence non précisée par la source",
+    "retrievedAt": "2026-10-05"
+  }
 }

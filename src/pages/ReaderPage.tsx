@@ -190,8 +190,10 @@ export function ReaderPage() {
 
   const [requete, setRequete] = useState('')
   const [resultatActif, setResultatActif] = useState(0)
-  /* Vers vers lequel l'utilisateur a navigué, en attente du bon chapitre. */
-  const [verseCible, setVerseCible] = useState<string | null>(null)
+  /* Vers vers lequel l'utilisateur a navigué, et compteur de navigations : la
+     ref porte la cible, l'état sert uniquement à réveiller l'effet. */
+  const verseCible = useRef<string | null>(null)
+  const [navigation, setNavigation] = useState(0)
   const boutonRecherche = useRef<HTMLButtonElement | null>(null)
 
   /* L'index ne porte que sur les colonnes affichées, et se reconstruit
@@ -271,20 +273,26 @@ export function ReaderPage() {
     (verseId: string) => {
       const cible = flat.find((entry) => entry.verse.id === verseId)
       if (!cible) return
-      setVerseCible(verseId)
+      /* Le vers visé vit dans une ref : il ne sert qu'à l'effet de défilement.
+         C'est le compteur qui déclenche l'effet, ce qui évite de remettre
+         l'état à zéro depuis l'effet lui-même. */
+      verseCible.current = verseId
+      setNavigation((n) => n + 1)
       if (cible.chapter.n !== chapter) changeChapter(cible.chapter.n)
     },
     [flat, chapter, changeChapter],
   )
 
   /* Le défilement attend que le vers soit à l'écran : un résultat d'un autre
-     chapitre n'existe pas dans le DOM tant que le chapitre n'a pas changé. */
+     chapitre n'existe pas dans le DOM tant que le chapitre n'a pas changé.
+     L'effet repasse seul au changement de chapitre, sans boucle. */
   useEffect(() => {
-    if (!verseCible) return
-    if (!flat.some((entry) => entry.verse.id === verseCible && entry.chapter.n === chapter)) return
-    scrollTo(verseCible)
-    setVerseCible(null)
-  }, [verseCible, chapter, flat, scrollTo])
+    if (navigation === 0) return
+    const cible = verseCible.current
+    if (!cible) return
+    if (!flat.some((entry) => entry.verse.id === cible && entry.chapter.n === chapter)) return
+    scrollTo(cible)
+  }, [navigation, chapter, flat, scrollTo])
 
   /* L'occurrence mise en avant : la première de la couche où le mot a été
      trouvé, dans le chapitre affiché seulement. */

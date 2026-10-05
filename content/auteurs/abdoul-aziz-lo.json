@@ -3,5 +3,15 @@
   "nameAr": "عبد العزيز لو",
   "tariha": "tidjan",
   "source": "https://markazulfuhum.app/authors/7",
-  "license": "Domaine public"
+  "license": "Domaine public",
+  "picture": "authors/abdoul-aziz-lo.webp",
+  "photoSource": {
+    "provider": "markazulfuhum",
+    "page": "https://markazulfuhum.app/authors/7",
+    "file": "https://markazulfuhum.app/media/author_photos/IMG_0111.jpg",
+    "author": null,
+    "license": null,
+    "note": "Licence non précisée par la source",
+    "retrievedAt": "2026-10-05"
+  }
 }

@@ -30,7 +30,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        /* Les portraits d'auteurs sont des WebP : sans cette extension, la
+           lecture hors ligne les afficherait comme des monogrammes. */
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
         navigateFallback: 'index.html',
         runtimeCaching: [
           {

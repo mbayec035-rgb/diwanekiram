@@ -3,5 +3,15 @@
   "nameAr": "السيد إبراهيم الرياحي",
   "tariha": "tidjan",
   "source": "https://markazulfuhum.app/authors/25",
-  "license": "Domaine public"
+  "license": "Domaine public",
+  "picture": "authors/seyyidi-ibrahim-ar-rayahi.webp",
+  "photoSource": {
+    "provider": "markazulfuhum",
+    "page": "https://markazulfuhum.app/authors/25",
+    "file": "https://markazulfuhum.app/media/author_photos/poet-Brahim-Riahi.webp",
+    "author": null,
+    "license": null,
+    "note": "Licence non précisée par la source",
+    "retrievedAt": "2026-10-05"
+  }
 }

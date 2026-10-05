@@ -3,5 +3,15 @@
   "nameAr": "اِبْنُ مُرْسِيَّةَ",
   "tariha": "tidjan",
   "source": "https://markazulfuhum.app/authors/11",
-  "license": "Domaine public"
+  "license": "Domaine public",
+  "picture": "authors/ibnu-mursiyyat.webp",
+  "photoSource": {
+    "provider": "markazulfuhum",
+    "page": "https://markazulfuhum.app/authors/11",
+    "file": "https://markazulfuhum.app/media/author_photos/Ibn_Arabi.jpg",
+    "author": null,
+    "license": null,
+    "note": "Licence non précisée par la source",
+    "retrievedAt": "2026-10-05"
+  }
 }

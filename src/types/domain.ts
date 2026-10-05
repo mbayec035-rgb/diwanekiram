@@ -3,6 +3,19 @@
    scripts/extract-content.mjs (public/data/**)
    ========================================================= */
 
+/** Provenance d'un portrait : d'où vient la photo, et sous quelles conditions.
+    Les sources markaz n'annoncent pas de licence, d'où `null`. */
+export interface PhotoSource {
+  provider: 'markazulfuhum' | 'wikimedia'
+  page: string
+  file: string
+  author: string | null
+  license: string | null
+  licenceUrl?: string
+  note?: string
+  retrievedAt?: string
+}
+
 export interface Author {
   id: string
   slug: string
@@ -14,6 +27,7 @@ export interface Author {
   bio: string
   bioSource: 'catalogue' | 'diwanekiram' | 'local' | 'none'
   picture: string | null
+  photoSource: PhotoSource | null
   xassidaCount: number
   verseCount: number
   slugs: string[]

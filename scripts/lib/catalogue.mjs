@@ -509,6 +509,8 @@ export function recomputeDerived(catalogue) {
         bio: clean(raw.bio ?? ''),
         bioSource: raw.bioSource ?? 'none',
         picture: raw.picture ?? null,
+        /* La provenance n'est utile que s'il y a une photo à créditer. */
+        photoSource: raw.picture ? (raw.photoSource ?? null) : null,
         xassidaCount: owned.length,
         verseCount: owned.reduce((total, xassida) => total + xassida.verseCount, 0),
         slugs: owned.map((xassida) => xassida.slug),

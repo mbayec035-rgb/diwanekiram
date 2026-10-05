@@ -3,5 +3,15 @@
   "nameAr": "السيد عبد الله جوم الجوفيوري",
   "tariha": "tidjan",
   "source": "https://markazulfuhum.app/authors/35",
-  "license": "Domaine public"
+  "license": "Domaine public",
+  "picture": "authors/serigne-abdoulaye-diom-diofior.webp",
+  "photoSource": {
+    "provider": "markazulfuhum",
+    "page": "https://markazulfuhum.app/authors/35",
+    "file": "https://markazulfuhum.app/media/author_photos/WhatsApp_Image_2026-02-14_at_21.50.22.jpeg",
+    "author": null,
+    "license": null,
+    "note": "Licence non précisée par la source",
+    "retrievedAt": "2026-10-05"
+  }
 }

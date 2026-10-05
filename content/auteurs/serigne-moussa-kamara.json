@@ -3,5 +3,15 @@
   "nameAr": "موسى بن أحمد الحبيب كمرا",
   "tariha": "tidjan",
   "source": "https://markazulfuhum.app/authors/36",
-  "license": "Domaine public"
+  "license": "Domaine public",
+  "picture": "authors/serigne-moussa-kamara.webp",
+  "photoSource": {
+    "provider": "markazulfuhum",
+    "page": "https://markazulfuhum.app/authors/36",
+    "file": "https://markazulfuhum.app/media/author_photos/6811.jpg",
+    "author": null,
+    "license": null,
+    "note": "Licence non précisée par la source",
+    "retrievedAt": "2026-10-05"
+  }
 }

@@ -29,6 +29,7 @@ function makeAuthor(partial: Partial<Author> & { id: string }): Author {
     bio: '',
     bioSource: 'none',
     picture: null,
+    photoSource: null,
     xassidaCount: 1,
     verseCount: 10,
     slugs: [],

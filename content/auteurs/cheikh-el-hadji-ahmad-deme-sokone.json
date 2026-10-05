@@ -3,5 +3,15 @@
   "nameAr": "الشَّيْخُ الْحَاجُّ أَحْمَدُ دِمْ السُّوكُونِي",
   "tariha": "tidjan",
   "source": "https://markazulfuhum.app/authors/32",
-  "license": "Domaine public"
+  "license": "Domaine public",
+  "picture": "authors/cheikh-el-hadji-ahmad-deme-sokone.webp",
+  "photoSource": {
+    "provider": "markazulfuhum",
+    "page": "https://markazulfuhum.app/authors/32",
+    "file": "https://markazulfuhum.app/media/author_photos/278772064_128732743079164_4409115912699710077_n.jpg",
+    "author": null,
+    "license": null,
+    "note": "Licence non précisée par la source",
+    "retrievedAt": "2026-10-05"
+  }
 }

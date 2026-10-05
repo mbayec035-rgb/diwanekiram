@@ -3,5 +3,15 @@
   "nameAr": "الشيخ الحاج إبراهيم انياس",
   "tariha": "tidjan",
   "source": "https://markazulfuhum.app/authors/27",
-  "license": "Domaine public"
+  "license": "Domaine public",
+  "picture": "authors/cheikh-elhadji-ibrahima-niass.webp",
+  "photoSource": {
+    "provider": "markazulfuhum",
+    "page": "https://markazulfuhum.app/authors/27",
+    "file": "https://markazulfuhum.app/media/author_photos/Shaykh_Ibrahim_Niass.jpg",
+    "author": null,
+    "license": null,
+    "note": "Licence non précisée par la source",
+    "retrievedAt": "2026-10-05"
+  }
 }

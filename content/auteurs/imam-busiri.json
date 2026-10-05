@@ -3,5 +3,15 @@
   "nameAr": "الْإِمَامُ الْبُوصِيرِي",
   "tariha": "tidjan",
   "source": "https://markazulfuhum.app/authors/6",
-  "license": "Domaine public"
+  "license": "Domaine public",
+  "picture": "authors/imam-busiri.webp",
+  "photoSource": {
+    "provider": "markazulfuhum",
+    "page": "https://markazulfuhum.app/authors/6",
+    "file": "https://markazulfuhum.app/media/author_photos/busiri.png",
+    "author": null,
+    "license": null,
+    "note": "Licence non précisée par la source",
+    "retrievedAt": "2026-10-05"
+  }
 }

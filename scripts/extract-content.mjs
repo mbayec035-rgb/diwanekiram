@@ -201,6 +201,7 @@ export async function loadSnapshotCatalogue() {
       /* Les portraits distants ne sont pas redistribués : on ne garde que
          ceux qui existent réellement dans public/authors/. */
       picture: resolveLocalPortrait(raw.picture, PORTRAIT_DIR),
+      photoSource: raw.photoSource ?? null,
     })
   }
 
@@ -318,6 +319,7 @@ export async function loadBundleCatalogue() {
       /* Les portraits du catalogue source ne sont pas redistribués :
          on ne conserve le chemin que s'il existe localement dans public/authors/. */
       picture: resolveLocalPortrait(raw.picture, PORTRAIT_DIR),
+      photoSource: raw.photoSource ?? null,
     })
   }
 

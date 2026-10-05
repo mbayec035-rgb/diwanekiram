@@ -1,6 +1,6 @@
 /* Petits éléments d'interface partagés. */
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -95,7 +95,12 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
   )
 }
 
-/** Portrait d'un auteur : photo si le fichier est présent, sinon monogramme. */
+/** Portrait d'un auteur : photo si le fichier est présent, sinon monogramme.
+ *
+ *  L'image reste décorative — le nom de l'auteur est toujours écrit juste à
+ *  côté dans les trois usages (carte, fiche, accueil). Lui donner un `alt`
+ *  ferait annoncer le nom deux fois de suite par un lecteur d'écran.
+ */
 export function Avatar({
   name,
   picture,
@@ -112,13 +117,28 @@ export function Avatar({
   const initials = useMemo(() => monogram(name), [name])
   const hue = useMemo(() => hueFrom(seed ?? name), [seed, name])
 
+  /* Un fichier annoncé peut manquer : on retombe sur les initiales plutôt que
+     d'afficher une image cassée. Le monogramme reste dessous, ce qui évite
+     aussi le vide pendant le chargement. */
+  const [enPanne, setEnPanne] = useState(false)
+  const photo = picture && !enPanne ? picture : null
+
   return (
     <span
-      className={`avatar ${className}`}
+      className={`avatar ${className}${photo ? ' avatar--photo' : ''}`}
       style={{ width: size, height: size, '--avatar-hue': hue } as CSSProperties}
       aria-hidden="true"
     >
-      {picture ? <img src={picture} alt="" loading="lazy" decoding="async" /> : <span>{initials}</span>}
+      <span className="avatar-initials">{initials}</span>
+      {photo ? (
+        <img
+          src={photo}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          onError={() => setEnPanne(true)}
+        />
+      ) : null}
     </span>
   )
 }

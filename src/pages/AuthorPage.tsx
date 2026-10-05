@@ -26,6 +26,22 @@ export function AuthorPage() {
   const totalVerses = works.reduce((sum, xassida) => sum + xassida.verseCount, 0)
   const totalTranslated = works.reduce((sum, xassida) => sum + xassida.translatedCount, 0)
 
+  /* Le crédit n'apparaît que pour une photo dont on connaît la source. */
+  const credit = useMemo(() => {
+    const source = author?.photoSource
+    if (!author?.picture || !source) return null
+
+    if (source.provider === 'wikimedia') {
+      return {
+        href: source.licenceUrl || source.page,
+        label: source.author && source.author !== 'Auteur non précisé' ? source.author : source.page,
+        traite: source.license ? `Licence ${source.license}` : null,
+      }
+    }
+
+    return { href: source.page, label: 'Markazulfuhum', traite: null }
+  }, [author])
+
   if (error) return <ErrorState message={error.message} onRetry={reload} />
 
   if (loading) {
@@ -91,6 +107,18 @@ export function AuthorPage() {
                 leur attribution reste incertaine.
               </p>
             )}
+
+            {credit ? (
+              /* Crédit discret : la provenance d'une photo reste accessible sans
+                 voler la place à la notice. */
+              <p className="author-credit">
+                Portrait :{' '}
+                <a href={credit.href} target="_blank" rel="noreferrer noopener">
+                  {credit.label}
+                </a>
+                {credit.traite ? `. ${credit.traite}` : null}
+              </p>
+            ) : null}
           </div>
         </section>
       </Reveal>

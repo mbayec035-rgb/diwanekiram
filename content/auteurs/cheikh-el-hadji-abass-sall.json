@@ -3,5 +3,15 @@
   "nameAr": "الشَّيْخُ الْحَاجُّ عَبَّاسْ صَلْ",
   "tariha": "tidjan",
   "source": "https://markazulfuhum.app/authors/33",
-  "license": "Domaine public"
+  "license": "Domaine public",
+  "picture": "authors/cheikh-el-hadji-abass-sall.webp",
+  "photoSource": {
+    "provider": "markazulfuhum",
+    "page": "https://markazulfuhum.app/authors/33",
+    "file": "https://markazulfuhum.app/media/author_photos/Abass.jpg",
+    "author": null,
+    "license": null,
+    "note": "Licence non précisée par la source",
+    "retrievedAt": "2026-10-05"
+  }
 }
