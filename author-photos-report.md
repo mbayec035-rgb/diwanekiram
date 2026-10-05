@@ -2,9 +2,9 @@
 
 Généré le 2026-10-05 par `npm run authors:pictures`.
 
-- **18** auteur(s) avec portrait retenu
-- **1** à vérifier manuellement
-- **13** sans portrait
+- **18** auteur(s) avec portrait retenu (dont 1 fourni(s) à la main)
+- **0** à vérifier manuellement
+- **14** sans portrait
 
 ## Règles appliquées
 
@@ -38,7 +38,8 @@ mais son stockage d'images répond `503` (constaté le 05/10/2026).
 | El Hadj Abdou Aziz Sy Dabakh | `el-hadj-abdou-aziz-sy-dabakh` | الشيخ الحاج عبد العزيز سي ”الدباغي“ | markazulfuhum | Nom arabe identique |
 | Elhadji Malick SY | `elhadji-malick-sy` | الشيخ السيد الحاج مالك سي | markazulfuhum | Nom arabe identique |
 | Serigne Mansour Sy Malick | `serigne-mansour-sy-malick` | الشيخ الحاج محمد المنصور سي | markazulfuhum | Nom arabe identique |
-| Serigne Maodo SY Dabakh | `serigne-maodo-sy-dabakh` | الشيخ الحاج مالك سي ”مَوْدُ“ الدباغي | markazulfuhum | Nom arabe identique |
+
+| Serigne Maodo SY Dabakh | `serigne-maodo-sy-dabakh` | الشيخ الحاج مالك سي ”مَوْدُ“ الدباغي | local | Fourni manuellement |
 
 
 ## À vérifier manuellement
@@ -46,9 +47,7 @@ mais son stockage d'images répond `503` (constaté le 05/10/2026).
 Correspondance trouvée sur Wikimedia : l'identité repose sur le titre exact de
 l'article, sans vérification d'identité assistée. À confirmer avant diffusion.
 
-| Auteur | slug | Nom arabe | Source | Note |
-| --- | --- | --- | --- | --- |
-| Oustaz Mbaye KA | `oustaz-mbaye-ka` | الأستاذ امبي كه | — | Wikimedia : limite de débit, non vérifié |
+_(aucun)_
 
 
 ## Sans portrait
@@ -64,6 +63,7 @@ l'article, sans vérification d'identité assistée. À confirmer avant diffusio
 | Cheikh Yahya Ibn Muhammad al Munawi | `cheikh-yahya-ibn-muhammad-al-munawi` | الشيخ يحيى بن محمد المناوي | — | Sur markaz, mais sans photo ; aucun article Wikipédia au nom exact |
 | Ibn Masʿūd | `ibn-mas-ud` | اِبْنُ مَسْعُودٍ | — | Sur markaz, mais sans photo ; aucun article Wikipédia au nom exact |
 | Les Fils De Shinqît | `les-fils-de-shinqit` | أَبْنَاءُ شِنْقِيطَ | — | Sur markaz, mais sans photo ; aucun article Wikipédia au nom exact |
+| Oustaz Mbaye KA | `oustaz-mbaye-ka` | الأستاذ امبي كه | — | Sur markaz, mais sans photo ; aucun article Wikipédia au nom exact |
 | Seyyidi Ibn ʿalī | `seyyidi-ibn-ali` | سيدي ابن علي | — | Sur markaz, mais sans photo ; aucun article Wikipédia au nom exact |
 | Seyyiduna Abubakr As-Siddiq | `seyyiduna-abubakr-as-siddiq` | سيدنا أبوبكر الصديق | — | Sur markaz, mais sans photo ; aucun article Wikipédia au nom exact |
 | Serigne Mansour Sy | `serigne-mansour-sy` | محمد المنصور سي | — | Introuvable sur markaz ni Wikipédia |

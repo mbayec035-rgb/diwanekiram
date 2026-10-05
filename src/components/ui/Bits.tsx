@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
+import { cheminPublic } from '../../services/mediaPath'
+
 export type BadgeTone = 'cyan' | 'mint' | 'muted' | 'warn'
 
 export function Badge({
@@ -121,7 +123,10 @@ export function Avatar({
      d'afficher une image cassée. Le monogramme reste dessous, ce qui évite
      aussi le vide pendant le chargement. */
   const [enPanne, setEnPanne] = useState(false)
-  const photo = picture && !enPanne ? picture : null
+  /* Le chemin est ancré sur BASE_URL : sur une route plus profonde que la
+     racine (« /auteurs/ibnu-mursiyyat »), un chemin relatif ne pointerait pas
+     vers le dossier public. */
+  const photo = picture && !enPanne ? cheminPublic(picture) : null
 
   return (
     <span

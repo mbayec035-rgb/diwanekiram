@@ -6,7 +6,7 @@
 /** Provenance d'un portrait : d'où vient la photo, et sous quelles conditions.
     Les sources markaz n'annoncent pas de licence, d'où `null`. */
 export interface PhotoSource {
-  provider: 'markazulfuhum' | 'wikimedia'
+  provider: 'markazulfuhum' | 'wikimedia' | 'local'
   page: string
   file: string
   author: string | null

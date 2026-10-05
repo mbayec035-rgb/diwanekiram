@@ -39,6 +39,12 @@ export function AuthorPage() {
       }
     }
 
+    if (source.provider === 'local') {
+      /* Image fournie à la main : on ne peut attribuer ni lien, ni licence.
+         Avertir serait honnête, inventer une source ne le serait pas. */
+      return { href: null, label: 'origine non précisée', traite: null }
+    }
+
     return { href: source.page, label: 'Markazulfuhum', traite: null }
   }, [author])
 
@@ -113,9 +119,13 @@ export function AuthorPage() {
                  voler la place à la notice. */
               <p className="author-credit">
                 Portrait :{' '}
-                <a href={credit.href} target="_blank" rel="noreferrer noopener">
-                  {credit.label}
-                </a>
+                {credit.href ? (
+                  <a href={credit.href} target="_blank" rel="noreferrer noopener">
+                    {credit.label}
+                  </a>
+                ) : (
+                  credit.label
+                )}
                 {credit.traite ? `. ${credit.traite}` : null}
               </p>
             ) : null}

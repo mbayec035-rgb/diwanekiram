@@ -23,6 +23,7 @@
  */
 
 import fs from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
@@ -66,6 +67,10 @@ async function lireAuteurs() {
       name: brut.name ?? '',
       nameAr: brut.nameAr ?? '',
       anonymous: Boolean(brut.anonymous),
+      /* On relit ce qui est déjà écrit : c'est ce qui permet de reconnaître un
+         portrait choisi à la main et de ne pas l'écraser au passage suivant. */
+      picture: brut.picture ?? null,
+      photoSource: brut.photoSource ?? null,
     })
   }
 
@@ -80,6 +85,8 @@ async function lireAuteurs() {
       name: auteur.name ?? '',
       nameAr: auteur.nameAr ?? '',
       anonymous: Boolean(auteur.anonymous),
+      picture: auteur.picture ?? null,
+      photoSource: auteur.photoSource ?? null,
     })
   }
 
@@ -298,10 +305,17 @@ async function ecrirePortrait(auteur, chemin, source) {
 /* Rapport                                                            */
 /* ------------------------------------------------------------------ */
 
-async function ecrireRapport(resultats) {
+async function ecrireRapport(resultats, manuels) {
   const avecPhoto = resultats.filter((r) => r.statut === 'photo')
   const aVerifier = resultats.filter((r) => r.statut === 'à vérifier')
   const sansPhoto = resultats.filter((r) => r.statut === 'sans photo')
+
+  /* Un portrait manuel compte comme ayant un portrait, mais il doit rester
+     visible dans le rapport : c'est la seule trace d'une provenance qu'aucune
+     source distante ne revendique. */
+  const lignesManuels = manuels.map(({ auteur, present }) =>
+    `| ${auteur.name} | \`${auteur.slug}\` | ${auteur.nameAr} | local | ${present ? 'Fourni manuellement' : '**Fichier manquant**'} |`,
+  )
 
   const ligne = (r) =>
     `| ${r.auteur.name} | \`${r.auteur.slug}\` | ${r.auteur.nameAr} | ${r.source?.provider ?? '—'} | ${r.note ?? '—'} |`
@@ -317,7 +331,7 @@ async function ecrireRapport(resultats) {
 
 Généré le ${new Date().toISOString().slice(0, 10)} par \`npm run authors:pictures\`.
 
-- **${avecPhoto.length}** auteur(s) avec portrait retenu
+- **${avecPhoto.length + manuels.length}** auteur(s) avec portrait retenu (dont ${manuels.length} fourni(s) à la main)
 - **${aVerifier.length}** à vérifier manuellement
 - **${sansPhoto.length}** sans portrait
 
@@ -334,7 +348,7 @@ mais son stockage d'images répond \`503\` (constaté le 05/10/2026).
 
 ## Avec portrait
 
-${tableau('', avecPhoto)}
+${tableau('', avecPhoto)}${lignesManuels.length > 0 ? `\n${lignesManuels.join('\n')}\n` : ''}
 
 ## À vérifier manuellement
 
@@ -381,10 +395,31 @@ console.log('Lecture des sources distantes…')
 const fichesMarkaz = await lireMarkaz()
 
 const resultats = []
+const manuels = []
 
 for (const auteur of auteurs) {
   if (auteur.anonymous) {
     resultats.push({ auteur, statut: 'sans photo', note: 'Auteur anonyme : jamais de portrait' })
+    continue
+  }
+
+  /* Un portrait posé à la main (provider « local ») est un choix délibéré : on
+     n'y touche pas, même avec --force, sinon le prochain passage effacerait la
+     décision. Le fichier reste censé exister, on le signale si ce n'est pas le
+     cas plutôt que de le retélécharger. */
+  if (auteur.photoSource?.provider === 'local') {
+    /* `picture` est relatif au dossier public, pas à la racine du dépôt. */
+    const present = existsSync(path.join(ROOT, 'public', auteur.picture ?? ''))
+    resultats.push({
+      auteur,
+      statut: 'portrait manuel',
+      source: auteur.photoSource,
+      note: present
+        ? 'Choix manuel conservé'
+        : 'Fichier absent : remettre une image dans public/authors/',
+    })
+    console.log(`  = ${auteur.name} — portrait manuel conservé`)
+    manuels.push({ auteur, present })
     continue
   }
 
@@ -445,11 +480,11 @@ for (const auteur of auteurs) {
   }
 }
 
-const { avecPhoto, aVerifier, sansPhoto } = await ecrireRapport(resultats)
+const { avecPhoto, aVerifier, sansPhoto } = await ecrireRapport(resultats, manuels)
 
 console.log(
-  `\n${avecPhoto.length} avec portrait, ${aVerifier.length} à vérifier, ${sansPhoto.length} sans portrait.`,
+  `\n${avecPhoto.length + manuels.length} avec portrait, ${aVerifier.length} à vérifier, ${sansPhoto.length} sans portrait.`,
 )
-if (avecPhoto.length || aVerifier.length) {
+if (avecPhoto.length || aVerifier.length || manuels.length) {
   console.log('\nRelancer `npm run data:build` pour reporter les portraits dans public/data/authors.json.')
 }

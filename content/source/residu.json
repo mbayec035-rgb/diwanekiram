@@ -151,12 +151,12 @@
       "bioSource": "diwanekiram",
       "picture": "authors/serigne-maodo-sy-dabakh.webp",
       "photoSource": {
-        "provider": "markazulfuhum",
-        "page": "https://markazulfuhum.app/authors/8",
-        "file": "https://markazulfuhum.app/media/author_photos/WhatsApp_Image_2025-07-05_at_20.50.51.jpeg",
+        "provider": "local",
+        "page": null,
+        "file": "public/authors/serigne-maodo-sy-dabakh.webp",
         "author": null,
         "license": null,
-        "note": "Licence non précisée par la source",
+        "note": "Image fournie manuellement, origine non vérifiée",
         "retrievedAt": "2026-10-05"
       }
     },
