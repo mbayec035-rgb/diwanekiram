@@ -15,6 +15,7 @@ import type {
   Xassida,
 } from '../types/domain'
 import { filterXassidas } from './search'
+import { sortAuthorsByPriority } from './authorOrder'
 import type { StudyVerse } from './quiz'
 
 const DATA_ROOT = `${import.meta.env.BASE_URL}data`.replace(/\/{2,}/g, '/')
@@ -41,7 +42,10 @@ async function getJson<T>(file: string): Promise<T> {
 
 export const loadManifest = () => getJson<Manifest>('manifest.json')
 export const loadXassidas = () => getJson<Xassida[]>('xassidas.json')
-export const loadAuthors = () => getJson<Author[]>('authors.json')
+/* L'ordre éditorial est appliqué une seule fois, à la source :
+   toutes les pages qui lisent le catalogue en héritent. */
+export const loadAuthors = () =>
+  getJson<Author[]>('authors.json').then(sortAuthorsByPriority)
 export const loadAudio = () => getJson<AudioEntry[]>('audio.json').catch(() => [] as AudioEntry[])
 
 /**

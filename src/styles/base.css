@@ -17,6 +17,15 @@ html {
   scroll-behavior: smooth;
 }
 
+.about-page {
+  scroll-behavior: auto;
+}
+
+[dir='rtl'] {
+  direction: rtl;
+  text-align: right;
+}
+
 body {
   min-height: 100dvh;
   background: var(--bg);

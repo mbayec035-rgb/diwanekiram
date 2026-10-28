@@ -3,6 +3,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+import { remapLibraryState } from './legacyAliases'
+
 export interface ProgressEntry {
   verseId: string
   /* Le chapitre n'est pas toujours connu : les œuvres figées gardent les
@@ -73,7 +75,13 @@ export const useLibrary = create<LibraryState>()(
       clearProgress: () => set({ progress: {} }),
       reset: () => set({ favorites: [], progress: {}, history: [] }),
     }),
-    { name: 'dk.state' },
+    {
+      name: 'dk.state',
+      /* Les œuvres fusionnées changent de slug : on redirige favoris,
+         historique et progression avant de rendre l'état à l'application. */
+      merge: (persisted, current) =>
+        remapLibraryState({ ...current, ...(persisted as Partial<LibraryState>) }),
+    },
   ),
 )
 

@@ -63,7 +63,7 @@ describe('filterXassidas', () => {
   const catalogue = [
     makeXassida({ id: 'burdu', name: 'Burdu', authorId: '1', verseCount: 227, translatedRatio: 0.67 }),
     makeXassida({ id: 'bushra', name: 'Bushra Laqad Nilnal Muna', authorId: '1', verseCount: 106, translatedRatio: 1 }),
-    makeXassida({ id: 'nuniya', name: 'Nuniya', authorId: '2', verseCount: 119, translatedRatio: 0 }),
+    makeXassida({ id: 'qasida-test', name: 'Qasida Test', authorId: '2', verseCount: 119, translatedRatio: 0 }),
   ]
 
   it('filtre par auteur', () => {
@@ -75,7 +75,7 @@ describe('filterXassidas', () => {
     expect(filterXassidas(catalogue, authors, { length: 'short' })).toEqual([])
     expect(filterXassidas(catalogue, authors, { length: 'medium' }).map((x) => x.name)).toEqual([
       'Bushra Laqad Nilnal Muna',
-      'Nuniya',
+      'Qasida Test',
     ])
   })
 
@@ -94,14 +94,14 @@ describe('filterXassidas', () => {
   it('trie par nombre de versets', () => {
     expect(filterXassidas(catalogue, authors, { sort: 'verses-asc' }).map((x) => x.name)).toEqual([
       'Bushra Laqad Nilnal Muna',
-      'Nuniya',
+      'Qasida Test',
       'Burdu',
     ])
     expect(filterXassidas(catalogue, authors, { sort: 'verses-desc' })[0].name).toBe('Burdu')
   })
 
   it('trie par taux de traduction croissant', () => {
-    expect(filterXassidas(catalogue, authors, { sort: 'translation' })[0].name).toBe('Nuniya')
+    expect(filterXassidas(catalogue, authors, { sort: 'translation' })[0].name).toBe('Qasida Test')
   })
 })
 
@@ -112,6 +112,6 @@ describe('highlightRanges', () => {
   })
 
   it('ignore les termes trop courts', () => {
-    expect(highlightRanges('Nuniya', 'n')).toEqual([])
+    expect(highlightRanges('Qasida Test', 'q')).toEqual([])
   })
 })

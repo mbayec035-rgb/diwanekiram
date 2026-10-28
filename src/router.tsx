@@ -17,6 +17,8 @@ const AuthorPage = lazy(() => import('./pages/AuthorPage').then((m) => ({ defaul
 const StudyPage = lazy(() => import('./pages/StudyPage').then((m) => ({ default: m.StudyPage })))
 const QuizPage = lazy(() => import('./pages/QuizPage').then((m) => ({ default: m.QuizPage })))
 const AboutPage = lazy(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })))
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage })))
+const TermsOfUsePage = lazy(() => import('./pages/TermsOfUsePage').then((m) => ({ default: m.TermsOfUsePage })))
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })))
 
@@ -58,6 +60,8 @@ export const router = createBrowserRouter([
       { path: 'auteurs', element: withSuspense(<AuthorsPage />) },
       { path: 'auteurs/:slug', element: withSuspense(<AuthorPage />) },
       { path: 'a-propos', element: withSuspense(<AboutPage />) },
+      { path: 'politique-de-confidentialite', element: withSuspense(<PrivacyPolicyPage />) },
+      { path: 'conditions-utilisation', element: withSuspense(<TermsOfUsePage />) },
       { path: 'reglages', element: withSuspense(<SettingsPage />) },
       { path: '*', element: withSuspense(<NotFoundPage />) },
     ],

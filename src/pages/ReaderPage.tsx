@@ -318,7 +318,6 @@ export function ReaderPage() {
   }
 
   const currentIndex = ids.indexOf(activeId ?? '')
-  const translatedPercent = Math.round(xassida.translatedRatio * 100)
 
   /* Le mètre, la rive et le thème n'existent que chez les sources qui les
      donnent : les 63 œuvres déjà publiées n'en ont aucune, leur absence
@@ -344,9 +343,6 @@ export function ReaderPage() {
             <div className="reader-badges">
               <Badge tone="muted">
                 {xassida.chapterCount} ch. · {xassida.verseCount} vers
-              </Badge>
-              <Badge tone={translatedPercent === 100 ? 'mint' : 'warn'}>
-                Traduction {translatedPercent} %
               </Badge>
             </div>
             {poetry.length > 0 && (

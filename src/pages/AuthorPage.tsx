@@ -23,10 +23,9 @@ export function AuthorPage() {
     [catalog, author],
   )
 
-  const totalVerses = works.reduce((sum, xassida) => sum + xassida.verseCount, 0)
-  const totalTranslated = works.reduce((sum, xassida) => sum + xassida.translatedCount, 0)
-
-  /* Le crédit n'apparaît que pour une photo dont on connaît la source. */
+  /* Le crédit n'apparaît que pour une photo dont la source est publiable.
+     Les portraits repris de markazulfuhum ne sont plus crédités dans la
+     fiche : la ligne « Portrait : … » disparaît entièrement pour ceux-ci. */
   const credit = useMemo(() => {
     const source = author?.photoSource
     if (!author?.picture || !source) return null
@@ -45,7 +44,7 @@ export function AuthorPage() {
       return { href: null, label: 'origine non précisée', traite: null }
     }
 
-    return { href: source.page, label: 'Markazulfuhum', traite: null }
+    return null
   }, [author])
 
   if (error) return <ErrorState message={error.message} onRetry={reload} />
@@ -97,10 +96,7 @@ export function AuthorPage() {
 
             <div className="acard-stats">
               <Badge tone="cyan">
-                {works.length} œuvre{works.length > 1 ? 's' : ''}
-              </Badge>
-              <Badge tone={totalVerses > 0 && totalTranslated === totalVerses ? 'mint' : 'warn'}>
-                Traduction {totalVerses > 0 ? Math.round((totalTranslated / totalVerses) * 100) : 0} %
+                {works.length} œuvre{works.length === 1 ? '' : 's'}
               </Badge>
               {author.anonymous ? <Badge tone="muted">Auteur inconnu</Badge> : null}
             </div>

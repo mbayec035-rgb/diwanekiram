@@ -33,9 +33,8 @@ export function LibraryPage() {
   const authorsById = useMemo(() => catalog?.authorsById ?? new Map<string, Author>(), [catalog])
   const visibleAuthors = useMemo(
     () =>
-      [...(catalog?.authors ?? [])]
-        .filter((author) => author.xassidaCount > 0)
-        .sort((a, b) => b.xassidaCount - a.xassidaCount || a.name.localeCompare(b.name, 'fr')),
+      /* L'ordre éditorial vient de `loadAuthors()`, on ne retrie pas ici. */
+      (catalog?.authors ?? []).filter((author) => author.xassidaCount > 0),
     [catalog],
   )
   const author = authorId ? authorsById.get(authorId) : undefined

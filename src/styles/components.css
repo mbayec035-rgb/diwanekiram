@@ -701,7 +701,7 @@
 }
 
 .view-stack.grid {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .view-stack.list {
@@ -722,6 +722,7 @@
 .view-stack.grid > li {
   display: grid;
   min-width: 0;
+  height: 100%;
 }
 
 @media (min-width: 640px) {
@@ -994,6 +995,8 @@
 .acard {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  min-width: 0;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   background: var(--surface);
@@ -1010,15 +1013,19 @@
 .acard-link {
   display: flex;
   flex-direction: column;
+  flex: 1;
   gap: var(--space-3);
+  min-width: 0;
   height: 100%;
   padding: var(--space-5);
 }
 
 .acard-head {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
   gap: var(--space-3);
+  min-width: 0;
 }
 
 /* Portrait : photo locale si disponible, sinon monogramme coloré */
@@ -1099,7 +1106,6 @@
   flex-direction: column;
   gap: 0.2rem;
   min-width: 0;
-  flex: 1;
 }
 
 .acard-chevron {
@@ -1119,6 +1125,7 @@
   -webkit-line-clamp: 2;
   line-clamp: 2;
   overflow: hidden;
+  overflow-wrap: anywhere;
   width: 100%;
   text-align: left;
   font-size: var(--step-0);
@@ -1129,7 +1136,7 @@
 
 /* Même règle que sur les cartes d'œuvres : le nom arabe tient sur sa
    propre ligne, sous le nom français. Les lettres restent en RTL, mais la
-   ligne part du même bord gauche — sans quoi le nom arabe dérives et les
+   ligne part du même bord gauche — sans quoi le nom arabe dérive et les
    repères ci-dessous ne s'alignent plus. */
 .acard-name-ar {
   display: -webkit-box;
@@ -1137,6 +1144,7 @@
   -webkit-line-clamp: 2;
   line-clamp: 2;
   overflow: hidden;
+  overflow-wrap: anywhere;
   width: 100%;
   direction: rtl;
   text-align: left;
@@ -1153,6 +1161,10 @@
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  overflow-wrap: anywhere;
+  /* La notice occupe la même hauteur utile sur toutes les fiches : les
+     boutons et les badges ne se décalent plus d'une carte à l'autre. */
+  min-height: calc(4 * 1.65em);
   font-size: var(--step--1);
   color: var(--text-dim);
   line-height: 1.65;
@@ -1173,14 +1185,26 @@
 .acard-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: 0.35rem;
-  /* Une rangée de badges réservée : les repères démarrent au même endroit. */
+  align-content: flex-start;
+  gap: 0.4rem 0.45rem;
+  margin-top: 0;
+  /* Une rangée de badges réservée : les repères démarrent au même endroit
+     sur toutes les cartes, avant la notice. */
   min-height: 1.7rem;
-  /* Même bord gauche que le nom et le nom arabe. */
   width: 100%;
   justify-content: flex-start;
   text-align: left;
+}
+
+/* Dans la vue en ligne, les badges restent sous l'identité. */
+.acard--row .acard-stats {
+  margin-top: 0.35rem;
+}
+
+/* Un libellé de badge ne se coupe pas au milieu d'un mot : c'est la rangée
+   qui passe à la ligne, badge par badge. */
+.acard-stats .badge {
+  white-space: nowrap;
 }
 
 /* Fiche auteur en ligne : portrait, identité, notice sur une ligne. */
@@ -1196,16 +1220,21 @@
 .acard--row .acard-bio {
   -webkit-line-clamp: 2;
   line-clamp: 2;
+  /* La hauteur réservée de la grille n'a pas lieu d'être sur une ligne :
+     chaque fiche en ligne se règle sur son propre contenu. */
+  min-height: 0;
   margin: 0;
 }
 
 /* Même ordre qu'en grille, une ligne de haut au lieu de deux. */
 .acard--row .acard-name,
 .acard--row .acard-name-ar {
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
-  text-overflow: ellipsis;
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .acard--row .acard-name {
@@ -2853,10 +2882,6 @@ kbd {
 
   .spotlight-works {
     padding: 0 var(--space-4) var(--space-3);
-  }
-
-  .acard-link {
-    padding: var(--space-4);
   }
 
   .reader-foot {

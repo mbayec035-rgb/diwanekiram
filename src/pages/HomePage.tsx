@@ -50,8 +50,8 @@ export function HomePage() {
   /* Les auteurs avec notice sont mis en avant sur l'accueil,
      avec un accès direct à quelques-unes de leurs œuvres. */
   const highlightedAuthors = (catalog?.authors ?? [])
+    /* L'ordre éditorial vient de `loadAuthors()`, on ne retrie pas ici. */
     .filter((author) => author.bio && !author.anonymous)
-    .sort((a, b) => b.xassidaCount - a.xassidaCount || a.name.localeCompare(b.name, 'fr'))
     .slice(0, 4)
 
   const worksByAuthor = useMemo(() => {

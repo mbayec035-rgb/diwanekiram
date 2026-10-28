@@ -39,9 +39,12 @@ export default defineConfig({
             urlPattern: /\/data\/.*\.json$/,
             handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'diwanekiram-data',
-              /* Le catalogue compte 558 fichiers JSON pour 277 œuvres (texte,
-                 traduction éventuelle, index), 6,3 Mo au total. La limite
+              /* Versionné : après une fusion d'œuvres, l'ancien cache peut
+                 encore servir des cartes supprimées (StaleWhileRevalidate).
+                 Changer le nom force l'abandon de l'ancien catalogue. */
+              cacheName: 'diwanekiram-data-v2',
+              /* Le catalogue compte 536 fichiers JSON pour 266 œuvres (texte,
+                 traduction éventuelle, index), 5,4 Mo au total. La limite
                  précédente, 200, était atteinte après quelques œuvres : le
                  cache évacuait sans cesse et la moitié du catalogue demeurait
                  indisponible hors ligne. 1200 laisse le catalogue entier

@@ -38,15 +38,10 @@ export function XassidaCard({
   const enLigne = view === 'list'
   const initiale = xassida.nameAr.trim().charAt(0) || xassida.name.trim().charAt(0)
 
-  const etat = progress ? (
-    <Badge tone="mint">En cours de lecture</Badge>
-  ) : xassida.translatedCount >= xassida.verseCount ? (
-    <Badge tone="cyan">Traduction complète</Badge>
-  ) : (
-    <Badge tone="warn" title="Certains versets n'ont pas encore de traduction">
-      Traduction partielle
-    </Badge>
-  )
+  /* Seule la progression de lecture reste signalée sur la carte. Les
+     mentions de couverture de traduction ne doivent plus y figurer : le
+     pourcentage et sa barre suffisent, sans étiquette supplémentaire. */
+  const etat = progress ? <Badge tone="mint">En cours de lecture</Badge> : null
 
   return (
     <Racine className="xcard-item" style={{ '--i': index } as CSSProperties}>

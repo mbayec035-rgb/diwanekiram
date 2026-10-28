@@ -25,7 +25,8 @@ export function AuthorsPage() {
       return normalize(`${author.name} ${author.nameAr ?? ''}`).includes(needle)
     })
 
-    return [...filtered].sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+    /* L'ordre éditorial vient de `loadAuthors()`, on ne retrie pas ici. */
+    return filtered
   }, [catalog, query])
 
   return (
@@ -53,7 +54,9 @@ export function AuthorsPage() {
               aria-label="Rechercher un auteur"
             />
           </label>
-          <span className="authors-count">{authors.length} auteurs</span>
+          <span className="authors-count">
+            {authors.length} auteur{authors.length > 1 ? 's' : ''}
+          </span>
           <ViewToggleButton view={view} onToggle={toggle} />
         </div>
       </Reveal>
@@ -63,7 +66,7 @@ export function AuthorsPage() {
       {loading ? (
         <div className={`view-stack ${view}`}>
           {Array.from({ length: 6 }, (_, index) => (
-            <Skeleton key={index} height={view === 'list' ? 74 : 230} radius={20} />
+            <Skeleton key={index} height={view === 'list' ? 104 : 330} radius={20} />
           ))}
         </div>
       ) : authors.length === 0 ? (

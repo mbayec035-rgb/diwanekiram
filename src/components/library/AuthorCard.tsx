@@ -1,9 +1,9 @@
 /* Fiche auteur — en grille ou en ligne.
 
-   Même gabarit que la carte de xassida : nom français, puis le nom arabe
-   sur sa propre ligne alignée à droite, puis les repères. La ligne
-   reprend les mêmes données que la carte : c'est la présentation qui
-   change, pas ce qu'on sait de l'auteur. */
+   Même gabarit pour tous : portrait, nom français, nom arabe sur sa propre
+   ligne (RTL), puis une rangée de repères, la notice et l'appel à action.
+   La ligne reprend les mêmes données que la carte : c'est la présentation
+   qui change, pas ce qu'on sait de l'auteur. */
 
 import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronRight } from 'lucide-react'
@@ -25,11 +25,13 @@ export function AuthorCard({ author, view = 'grid' }: { author: Author; view?: V
 
   const stats = (
     <span className="acard-stats">
-      <Badge tone="muted">{author.tarihaLabel}</Badge>
+      {author.tarihaLabel ? <Badge tone="muted">{author.tarihaLabel}</Badge> : null}
       {author.anonymous ? <Badge tone="muted">Auteur inconnu</Badge> : null}
-      <Badge tone="cyan">
-        {author.xassidaCount} œuvre{author.xassidaCount > 1 ? 's' : ''}
-      </Badge>
+      {Number.isFinite(author.xassidaCount) ? (
+        <Badge tone="cyan">
+          {author.xassidaCount} œuvre{author.xassidaCount === 1 ? '' : 's'}
+        </Badge>
+      ) : null}
     </span>
   )
 
@@ -39,9 +41,9 @@ export function AuthorCard({ author, view = 'grid' }: { author: Author; view?: V
         <Link className="acard-link" to={lien}>
           {portrait}
           <span className="acard-identity">
-            <span className="acard-name">{author.name}</span>
+            <span className="acard-name" title={author.name}>{author.name}</span>
             {/* La ligne arabe reste même vide : les fiches s'alignent. */}
-            <span className="acard-name-ar" lang="ar" dir="rtl">
+            <span className="acard-name-ar" lang="ar" dir="rtl" title={author.nameAr}>
               {author.nameAr}
             </span>
             {stats}
@@ -59,15 +61,17 @@ export function AuthorCard({ author, view = 'grid' }: { author: Author; view?: V
         <span className="acard-head">
           {portrait}
           <span className="acard-identity">
-            <span className="acard-name">{author.name}</span>
+            <span className="acard-name" title={author.name}>{author.name}</span>
             {/* La ligne arabe reste même vide : les fiches s'alignent. */}
-            <span className="acard-name-ar" lang="ar" dir="rtl">
+            <span className="acard-name-ar" lang="ar" dir="rtl" title={author.nameAr}>
               {author.nameAr}
             </span>
-            {stats}
           </span>
           <ChevronRight className="acard-chevron" size={18} aria-hidden="true" />
         </span>
+
+        {/* Zone de badges dédiée, identique sur toutes les fiches. */}
+        {stats}
 
         <span className="acard-bio">{bio}</span>
 
