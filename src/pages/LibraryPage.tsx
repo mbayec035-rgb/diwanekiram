@@ -1,19 +1,14 @@
-/* Bibliothèque : recherche, filtres, tri. */
+/* Bibliothèque : recherche, sélection d'auteur, tri. */
 
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Search, X, SlidersHorizontal, Users } from 'lucide-react'
+import { Search, X, Users } from 'lucide-react'
 import { useAsync } from '../hooks/useAsync'
 import { useViewMode } from '../hooks/useViewMode'
 import { loadCatalog } from '../services/library'
-import {
-  LENGTH_OPTIONS,
-  SORT_OPTIONS,
-  filterXassidas,
-  type LengthFilter,
-  type SortKey,
-} from '../services/search'
+import { SORT_OPTIONS, filterXassidas, type SortKey } from '../services/search'
 import { Reveal } from '../components/motion/Reveal'
+import { AuthorSelect } from '../components/library/AuthorSelect'
 import { XassidaCard } from '../components/library/XassidaCard'
 import { EmptyState, ErrorState, Skeleton } from '../components/ui/Bits'
 import { ViewToggleButton } from '../components/ui/ViewToggleButton'
@@ -23,9 +18,7 @@ export function LibraryPage() {
   const [params, setParams] = useSearchParams()
   const query = params.get('q') ?? ''
   const authorId = params.get('auteur')
-  const length = (params.get('longueur') as LengthFilter | null) ?? 'all'
   const sort = (params.get('tri') as SortKey | null) ?? 'az'
-  const [showFilters, setShowFilters] = useState(false)
   const { view, toggle } = useViewMode('dk.vue.oeuvres')
 
   const { data: catalog, error, loading, reload } = useAsync(loadCatalog, [])
@@ -42,9 +35,9 @@ export function LibraryPage() {
   const results = useMemo(
     () =>
       catalog
-        ? filterXassidas(catalog.xassidas, authorsById, { query, authorId, length, sort })
+        ? filterXassidas(catalog.xassidas, authorsById, { query, authorId, sort })
         : [],
-    [catalog, authorsById, query, authorId, length, sort],
+    [catalog, authorsById, query, authorId, sort],
   )
 
   const update = (key: string, value: string | null) => {
@@ -54,8 +47,7 @@ export function LibraryPage() {
     setParams(next, { replace: true })
   }
 
-  const clearAll = () => setParams(new URLSearchParams(), { replace: true })
-  const hasFilters = Boolean(query || authorId || length !== 'all' || sort !== 'az')
+  const hasFilters = Boolean(query || authorId || sort !== 'az')
 
   return (
     <div className="page-stack">
@@ -101,32 +93,13 @@ export function LibraryPage() {
           ) : null}
         </div>
 
-        <button
-          type="button"
-          className="button button--outline button--md toolbar-toggle"
-          onClick={() => setShowFilters((value) => !value)}
-          aria-expanded={showFilters}
-        >
-          <SlidersHorizontal size={16} /> Filtres
-        </button>
-
         <ViewToggleButton view={view} onToggle={toggle} />
 
-        <label className="toolbar-sort toolbar-author">
-          <span>Auteur</span>
-          <select
-            value={authorId ?? ''}
-            onChange={(event) => update('auteur', event.target.value || null)}
-            aria-label="Filtrer la bibliothèque par auteur"
-          >
-            <option value="">Tous les auteurs</option>
-            {visibleAuthors.map((author) => (
-              <option key={author.id} value={author.id}>
-                {author.name} · {author.xassidaCount}
-              </option>
-            ))}
-          </select>
-        </label>
+        <AuthorSelect
+          authors={visibleAuthors}
+          value={authorId}
+          onChange={(id) => update('auteur', id)}
+        />
 
         <label className="toolbar-sort">
           <span>Tri</span>
@@ -139,55 +112,6 @@ export function LibraryPage() {
           </select>
         </label>
       </div>
-
-      {showFilters ? (
-        <Reveal className="filters">
-          <fieldset className="chips">
-            <legend>Longueur</legend>
-            {LENGTH_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`chip${length === option.value ? ' is-active' : ''}`}
-                onClick={() => update('longueur', option.value === 'all' ? null : option.value)}
-                aria-pressed={length === option.value}
-              >
-                {option.label}
-              </button>
-            ))}
-          </fieldset>
-
-          <fieldset className="chips">
-            <legend>Auteur</legend>
-            <button
-              type="button"
-              className={`chip${!authorId ? ' is-active' : ''}`}
-              onClick={() => update('auteur', null)}
-              aria-pressed={!authorId}
-            >
-              Tous
-            </button>
-            {visibleAuthors.map((author) => (
-              <button
-                key={author.id}
-                type="button"
-                className={`chip${authorId === author.id ? ' is-active' : ''}`}
-                onClick={() => update('auteur', author.id)}
-                aria-pressed={authorId === author.id}
-              >
-                {author.name}
-                <span className="chip-count">{author.xassidaCount}</span>
-              </button>
-            ))}
-          </fieldset>
-
-          {hasFilters ? (
-            <button type="button" className="button button--ghost button--sm" onClick={clearAll}>
-              Réinitialiser
-            </button>
-          ) : null}
-        </Reveal>
-      ) : null}
 
       {error ? <ErrorState message={error.message} onRetry={reload} /> : null}
 
