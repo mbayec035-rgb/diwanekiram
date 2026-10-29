@@ -29,10 +29,19 @@ const maskable = await sharp(source, sharpOptions)
   .png()
   .toBuffer()
 
+/* iOS applique son propre masque et remplit la transparence en noir : on aplatit
+   l'icône sur le fond sombre pour éviter des coins noirs sur l'écran d'accueil. */
+const appleTouch = await sharp(source, sharpOptions)
+  .resize(180, 180)
+  .flatten({ background: { r: 4, g: 7, b: 11 } })
+  .png()
+  .toBuffer()
+
 const targets = [
   ['public/icons-192.png', await sharp(source, sharpOptions).resize(192, 192).png().toBuffer()],
   ['public/icons-512.png', plain],
   ['public/icons-maskable-512.png', maskable],
+  ['public/apple-touch-icon.png', appleTouch],
 ]
 
 for (const [file, buffer] of targets) {

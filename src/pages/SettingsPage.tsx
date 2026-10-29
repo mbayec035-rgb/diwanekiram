@@ -23,6 +23,20 @@ export function SettingsPage() {
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null)
   const [online, setOnline] = useState(() => navigator.onLine)
 
+  /* iOS n'expose pas `beforeinstallprompt` : l'installation se fait à la main
+     depuis le menu Partager de Safari. On détecte aussi le mode autonome pour
+     ne pas proposer d'installer une application déjà installée. */
+  const [isIos] = useState(
+    () =>
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
+  )
+  const [installed] = useState(
+    () =>
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as Navigator & { standalone?: boolean }).standalone === true,
+  )
+
   useEffect(() => {
     const onPrompt = (event: Event) => {
       event.preventDefault()
@@ -203,28 +217,47 @@ export function SettingsPage() {
             <div className="panel-row">
               <div>
                 <strong>Installation</strong>
-                <p className="muted small">
-                  {installPrompt
-                    ? 'Installez DiwaneKiram pour un accès hors ligne complet.'
-                    : 'Utilisez le menu du navigateur pour installer l’application.'}
-                </p>
+                {installed ? (
+                  <p className="muted small">DiwaneKiram est installée sur cet appareil.</p>
+                ) : isIos ? (
+                  <p className="muted small">
+                    Sur iPhone et iPad : ouvrez cette page dans Safari, touchez{' '}
+                    <strong>Partager</strong>, puis <strong>Sur l’écran d’accueil</strong>.
+                  </p>
+                ) : installPrompt ? (
+                  <p className="muted small">
+                    Installez DiwaneKiram pour un accès hors ligne complet.
+                  </p>
+                ) : (
+                  <p className="muted small">
+                    Utilisez le menu du navigateur pour installer l’application.
+                  </p>
+                )}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                icon={<Download size={15} />}
-                disabled={!installPrompt}
-                onClick={() => installPrompt?.prompt()}
-              >
-                Installer
-              </Button>
+              {installed ? (
+                <span className="badge badge--mint">Installée</span>
+              ) : isIos ? (
+                <span className="badge badge--cyan">iOS</span>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={<Download size={15} />}
+                  disabled={!installPrompt}
+                  onClick={() => installPrompt?.prompt()}
+                >
+                  Installer
+                </Button>
+              )}
             </div>
 
             <div className="panel-row">
               <div>
                 <strong>État du réseau</strong>
                 <p className="muted small">
-                  {online ? 'En ligne — le catalogue est disponible.' : 'Hors ligne — le catalogue mis en cache reste lisible.'}
+                  {online
+                    ? 'En ligne — le catalogue est disponible.'
+                    : 'Hors ligne — tout le catalogue reste lisible.'}
                 </p>
               </div>
               <span className={`badge ${online ? 'badge--mint' : 'badge--warn'}`}>

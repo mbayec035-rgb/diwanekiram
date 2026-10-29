@@ -20,6 +20,11 @@ import '@fontsource/noto-naskh-arabic/arabic-700.css'
 import './styles/index.css'
 import { router } from './router'
 
+/* L'ancien service worker stockait le catalogue dans un cache runtime dédié.
+   Il est désormais précaché : on supprime le cache résiduel des installations
+   existantes pour ne pas conserver deux copies des mêmes JSON. */
+if ('caches' in window) void caches.delete('diwanekiram-data-v2')
+
 registerSW({ immediate: true })
 
 createRoot(document.getElementById('root')!).render(

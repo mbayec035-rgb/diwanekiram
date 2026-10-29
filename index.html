@@ -3,8 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- iOS n'utilise pas toujours les icônes du manifest pour l'écran d'accueil. -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#05070a" />
+    <!-- Mode application autonome sur iOS (Safari) et Android. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="DiwaneKiram" />
+    <!-- `black` plutôt que `black-translucent` : la barre supérieure est fixe et
+         ne réserve pas encore env(safe-area-inset-top), le contenu passerait
+         sous l'encoche. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta
       name="description"
       content="DiwaneKiram — bibliothèque numérique des xassidas : texte arabe, transcription phonétique et traduction française, lisible hors ligne."

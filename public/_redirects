@@ -1,0 +1,3 @@
+# Netlify : les routes de l'application (React Router) sont servies par
+# index.html, sinon un rechargement sur /reader/... renvoie une 404.
+/*  /index.html  200

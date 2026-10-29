@@ -30,39 +30,15 @@ export default defineConfig({
         ],
       },
       workbox: {
-        /* Les portraits d'auteurs sont des WebP : sans cette extension, la
-           lecture hors ligne les afficherait comme des monogrammes. */
-        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
+        /* Tout le catalogue est précaché : les 556 fichiers JSON (5,5 Mo)
+           contiennent le manifeste, les auteurs, les versets et les
+           traductions. Une fois l'application ouverte en ligne, chaque œuvre
+           reste lisible hors ligne — y compris celles jamais consultées. */
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,json}'],
         navigateFallback: 'index.html',
-        runtimeCaching: [
-          {
-            urlPattern: /\/data\/.*\.json$/,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              /* Versionné : après une fusion d'œuvres, l'ancien cache peut
-                 encore servir des cartes supprimées (StaleWhileRevalidate).
-                 Changer le nom force l'abandon de l'ancien catalogue. */
-              cacheName: 'diwanekiram-data-v2',
-              /* Le catalogue compte 536 fichiers JSON pour 266 œuvres (texte,
-                 traduction éventuelle, index), 5,4 Mo au total. La limite
-                 précédente, 200, était atteinte après quelques œuvres : le
-                 cache évacuait sans cesse et la moitié du catalogue demeurait
-                 indisponible hors ligne. 1200 laisse le catalogue entier
-                 tenir en cache, très au-dessus de la valeur par défaut de
-                 Workbox (60), pour que la lecture hors ligne soit complète
-                 plutôt que partiellement servie. */
-              expiration: { maxEntries: 1200, maxAgeSeconds: 60 * 60 * 24 * 90 },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'diwanekiram-fonts',
-              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
-            },
-          },
-        ],
+        /* Supprime les anciens précaches lors d'une mise à jour du service
+           worker, pour ne pas conserver indéfiniment les fichiers obsolètes. */
+        cleanupOutdatedCaches: true,
       },
       devOptions: { enabled: false },
     }),
