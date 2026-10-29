@@ -3,7 +3,6 @@ import { aboutTranslations } from '../data/about';
 import { WhoWeAre } from '../components/about/WhoWeAre';
 import { History } from '../components/about/History';
 import { SocialLinks } from '../components/about/SocialLinks';
-import { SuggestionForm } from '../components/about/SuggestionForm';
 import { ContactShareLegalGrid } from '../components/about/ContactShareLegalGrid';
 
 export function AboutPage() {
@@ -23,7 +22,6 @@ export function AboutPage() {
         <History lang={lang} />
         <SocialLinks lang={lang} />
         <ContactShareLegalGrid lang={lang} />
-        <SuggestionForm lang={lang} />
       </div>
     </div>
   );

@@ -31,11 +31,6 @@ export const shareData = {
   url: 'https://diwanekiram.vercel.app/',
 };
 
-// Formulaire de suggestion (endpoint à configurer dans .env)
-export const suggestionConfig = {
-  endpointEnvKey: 'VITE_FORMSPREE_ENDPOINT', // ou VITE_EMAILJS_ENDPOINT selon le service choisi
-};
-
 // Clés de traduction (à ajouter dans le système de traduction existant si besoin)
 // Les textes sont centralisés ici, le composant les utilisera directement avec la logique FR/AR
 export const aboutTranslations = {
@@ -106,26 +101,6 @@ export const aboutTranslations = {
         copyButton: 'Copier le lien',
         copySuccess: 'Lien copié',
       },
-      suggestion: {
-        id: 'suggestion',
-        title: 'Suggestion aux créateurs',
-        intro: 'Envoyez vos suggestions, remarques ou signalements.',
-        nameLabel: 'Nom (facultatif)',
-        emailLabel: 'Email (facultatif)',
-        typeLabel: 'Type',
-        typeOptions: [
-          { value: 'suggestion', label: 'Suggestion' },
-          { value: 'erreur', label: 'Erreur dans un texte' },
-          { value: 'nouveau_livre', label: 'Nouveau livre' },
-          { value: 'autre', label: 'Autre' },
-        ],
-        messageLabel: 'Message (obligatoire)',
-        submit: 'Envoyer',
-        sending: 'Envoi en cours...',
-        success: 'Message envoyé avec succès.',
-        error: 'Une erreur est survenue lors de l\'envoi.',
-        required: 'Le message est obligatoire.',
-      },
       legal: {
         id: 'legal',
         title: 'Légal',
@@ -189,26 +164,6 @@ export const aboutTranslations = {
         shareButton: 'مشاركة',
         copyButton: 'نسخ الرابط',
         copySuccess: 'تم نسخ الرابط',
-      },
-      suggestion: {
-        id: 'suggestion',
-        title: 'اقتراح للمبدعين',
-        intro: 'أرسل اقتراحاتك أو ملاحظاتك أو بلاغاتك.',
-        nameLabel: 'الاسم (اختياري)',
-        emailLabel: 'البريد الإلكتروني (اختياري)',
-        typeLabel: 'النوع',
-        typeOptions: [
-          { value: 'suggestion', label: 'اقتراح' },
-          { value: 'erreur', label: 'خطأ في نص' },
-          { value: 'nouveau_livre', label: 'كتاب جديد' },
-          { value: 'autre', label: 'آخر' },
-        ],
-        messageLabel: 'الرسالة (إلزامية)',
-        submit: 'إرسال',
-        sending: 'جاري الإرسال...',
-        success: 'تم إرسال الرسالة بنجاح.',
-        error: 'حدث خطأ أثناء الإرسال.',
-        required: 'الرسالة إلزامية.',
       },
       legal: {
         id: 'legal',

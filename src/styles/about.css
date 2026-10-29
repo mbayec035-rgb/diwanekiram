@@ -310,62 +310,6 @@
   font-size: var(--step--1);
 }
 
-.about-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  max-width: 600px;
-}
-
-.about-form-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.about-form-label {
-  font-size: var(--about-label-size);
-  color: var(--text-soft);
-}
-
-.about-form-input,
-.about-form-textarea {
-  padding: 0.6rem 0.8rem;
-  border-radius: calc(var(--about-border-radius) - 2px);
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface-solid) 60%, transparent);
-  color: var(--text);
-  font-family: var(--font-ui);
-  font-size: var(--about-text-size);
-}
-
-.about-form-input:focus,
-.about-form-textarea:focus {
-  outline: none;
-  border-color: var(--border-strong);
-}
-
-.about-form-textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-.about-message {
-  padding: var(--space-2) var(--space-3);
-  border-radius: calc(var(--about-border-radius) - 2px);
-  font-size: var(--about-label-size);
-}
-
-.about-message.success {
-  background: color-mix(in srgb, var(--mint) 20%, transparent);
-  color: var(--text);
-}
-
-.about-message.error {
-  background: color-mix(in srgb, var(--danger) 20%, transparent);
-  color: var(--text);
-}
-
 .about-legal-links {
   display: flex;
   flex-direction: column;
