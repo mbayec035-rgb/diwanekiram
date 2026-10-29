@@ -1826,41 +1826,13 @@
   display: none;
 }
 
-.author-select-search {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: 0.5rem;
-  margin: var(--space-2);
-  padding: 0.5rem 0.7rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg) 55%, transparent);
-  color: var(--text-dim);
-}
-
-.author-select-search:focus-within {
-  border-color: var(--border-strong);
-  color: var(--cyan);
-}
-
-.author-select-search input {
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  background: none;
-  outline: none;
-  color: var(--text);
-  font-size: var(--step--1);
-}
-
 .author-select-list {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-height: 0;
   margin: 0;
-  padding: 0 var(--space-2) var(--space-2);
+  padding: var(--space-2);
   overflow-y: auto;
   overscroll-behavior: contain;
   list-style: none;
@@ -1907,13 +1879,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.author-select-empty {
-  padding: var(--space-3);
-  text-align: center;
-  color: var(--text-dim);
-  font-size: var(--step--1);
 }
 
 /* Téléphone (portrait et paysage) : feuille du bas pleine largeur. */

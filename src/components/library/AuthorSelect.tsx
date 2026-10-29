@@ -2,9 +2,9 @@
    feuille du bas sur téléphone. Le filtrage reste celui de la bibliothèque :
    `onChange` renvoie l'identifiant de l'auteur, ou `null` pour tous. */
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
-import { Check, ChevronDown, Search } from 'lucide-react'
+import { Check, ChevronDown } from 'lucide-react'
 import type { Author } from '../../types/domain'
 
 /* Doit rester synchronisé avec la media query de `components.css`. */
@@ -27,29 +27,25 @@ export function AuthorSelect({
   onChange: (authorId: string | null) => void
 }) {
   const [open, setOpen] = useState(false)
-  const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
-  const searchRef = useRef<HTMLInputElement>(null)
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([])
 
   const selected = value ? authors.find((author) => author.id === value) : undefined
 
-  const options = useMemo<AuthorOption[]>(() => {
-    const term = query.trim().toLocaleLowerCase('fr')
-    const matches = term
-      ? authors.filter((author) => author.name.toLocaleLowerCase('fr').includes(term))
-      : authors
-    return [
-      { id: null, name: 'Tous les auteurs' },
-      ...matches.map((author) => ({ id: author.id, name: author.name })),
-    ]
-  }, [authors, query])
+  const options: AuthorOption[] = [
+    { id: null, name: 'Tous les auteurs' },
+    ...authors.map((author) => ({ id: author.id, name: author.name })),
+  ]
 
-  /* Chaque ouverture repart d'une recherche vierge et place le focus dedans. */
+  /* À l'ouverture, le focus va sur le panneau — jamais sur un champ de saisie :
+     le clavier virtuel ne s'ouvre donc pas sur téléphone ou tablette. */
   useEffect(() => {
     if (!open) return
-    const frame = window.requestAnimationFrame(() => searchRef.current?.focus())
+    const frame = window.requestAnimationFrame(() =>
+      panelRef.current?.focus({ preventScroll: true }),
+    )
     return () => window.cancelAnimationFrame(frame)
   }, [open])
 
@@ -58,7 +54,6 @@ export function AuthorSelect({
       setOpen(false)
       return
     }
-    setQuery('')
     setActiveIndex(0)
     setOpen(true)
   }
@@ -153,7 +148,7 @@ export function AuthorSelect({
       window.removeEventListener('resize', place)
       window.removeEventListener('scroll', place, true)
     }
-  }, [open, query])
+  }, [open])
 
   const choose = (authorId: string | null) => {
     onChange(authorId)
@@ -161,14 +156,26 @@ export function AuthorSelect({
     triggerRef.current?.focus()
   }
 
-  const onSearchKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+  const focusOption = (index: number) => {
+    const next = Math.max(0, Math.min(index, options.length - 1))
+    setActiveIndex(next)
+    optionRefs.current[next]?.focus()
+  }
+
+  const onPanelKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'ArrowDown') {
       event.preventDefault()
-      setActiveIndex((index) => Math.min(index + 1, options.length - 1))
+      focusOption(activeIndex + 1)
     } else if (event.key === 'ArrowUp') {
       event.preventDefault()
-      setActiveIndex((index) => Math.max(index - 1, 0))
-    } else if (event.key === 'Enter') {
+      focusOption(activeIndex - 1)
+    } else if (event.key === 'Home') {
+      event.preventDefault()
+      focusOption(0)
+    } else if (event.key === 'End') {
+      event.preventDefault()
+      focusOption(options.length - 1)
+    } else if (event.key === 'Enter' && event.target === panelRef.current) {
       event.preventDefault()
       const option = options[activeIndex]
       if (option) choose(option.id)
@@ -209,24 +216,10 @@ export function AuthorSelect({
               className="author-select-panel"
               role="dialog"
               aria-label="Choisir un auteur"
+              tabIndex={-1}
+              onKeyDown={onPanelKeyDown}
             >
               <span className="author-select-grabber" aria-hidden="true" />
-
-              <div className="author-select-search">
-                <Search size={15} aria-hidden="true" />
-                <input
-                  ref={searchRef}
-                  type="search"
-                  value={query}
-                  onChange={(event) => {
-                    setQuery(event.target.value)
-                    setActiveIndex(0)
-                  }}
-                  onKeyDown={onSearchKeyDown}
-                  placeholder="Rechercher un auteur…"
-                  aria-label="Rechercher un auteur"
-                />
-              </div>
 
               <ul className="author-select-list">
                 {options.map((option, index) => {
@@ -234,6 +227,9 @@ export function AuthorSelect({
                   return (
                     <li key={option.id ?? 'all'}>
                       <button
+                        ref={(element) => {
+                          optionRefs.current[index] = element
+                        }}
                         type="button"
                         className={[
                           'author-select-option',
@@ -243,6 +239,7 @@ export function AuthorSelect({
                           .filter(Boolean)
                           .join(' ')}
                         onClick={() => choose(option.id)}
+                        onFocus={() => setActiveIndex(index)}
                         onMouseEnter={() => setActiveIndex(index)}
                         aria-pressed={isSelected}
                         data-active={index === activeIndex ? 'true' : undefined}
@@ -253,10 +250,6 @@ export function AuthorSelect({
                     </li>
                   )
                 })}
-
-                {query && options.length === 1 ? (
-                  <li className="author-select-empty">Aucun auteur trouvé.</li>
-                ) : null}
               </ul>
             </div>
           </>
