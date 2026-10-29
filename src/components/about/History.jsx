@@ -13,28 +13,13 @@ export function History({ lang = 'fr' }) {
 
       <div className="about-section-content">
         <div className="about-block">
-          <h3 className="about-block-title">{t.creation}</h3>
-          <p className="about-text">{t.creationText}</p>
-        </div>
-
-        <div className="about-block">
-          <h3 className="about-block-title">{t.context}</h3>
-          <p className="about-text">{t.contextText}</p>
-        </div>
-
-        <div className="about-block">
-          <h3 className="about-block-title">{t.objectives}</h3>
-          <p className="about-text">{t.objectivesText}</p>
-        </div>
-
-        <div className="about-block">
-          <h3 className="about-block-title">{t.activities}</h3>
-          <p className="about-text">{t.activitiesText}</p>
-        </div>
-
-        <div className="about-block">
-          <h3 className="about-block-title">{t.link}</h3>
-          <p className="about-text">{t.linkText}</p>
+          <h3 className="about-block-title">{t.howTitle}</h3>
+          <p className="about-text">{t.howText}</p>
+          <ul className="about-list">
+            {t.howItems.map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>

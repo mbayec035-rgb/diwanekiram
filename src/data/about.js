@@ -74,23 +74,17 @@ export const aboutTranslations = {
       },
       history: {
         id: 'histoire',
-        title: 'Histoire de Dahiratoul Kiram',
+        title: 'Notre histoire',
         intro:
-          'Née à Dakar en 1927, la Dahiratoul Kiram prolonge l’œuvre de Serigne Babacar Sy et structure la vie spirituelle des disciples tidianes.',
-        creation: 'Création',
-        creationText: 'Année : 1927 — Lieu : Dakar — Fondateurs : Serigne Babacar Sy',
-        context: 'Contexte et motivation',
-        contextText:
-          'Après le rappel à Dieu d’El Hadji Malick Sy en 1922, Serigne Babacar Sy lui succède comme premier khalife général des Tidianes. Soucieux de renforcer la foi des disciples et de préserver leur attachement aux enseignements de l’islam, il encourage le regroupement des fidèles autour de la prière, de l’éducation religieuse, de la solidarité et de la discipline spirituelle. C’est dans ce contexte qu’est créée, en 1927 à Dakar, la Dahiratoul Kiram, une organisation religieuse destinée notamment à rassembler des disciples, parmi lesquels figuraient des personnes exerçant des fonctions dans l’administration, afin qu’ils puissent entretenir leur pratique religieuse malgré leurs obligations professionnelles.',
-        objectives: 'Objectifs',
-        objectivesText:
-          'Renforcer les liens entre les talibés, développer leur connaissance de la religion, favoriser les prières collectives et maintenir une relation étroite avec leur guide spirituel à Tivaouane. La Dahiratoul Kiram contribue également à promouvoir les valeurs de fraternité, d’entraide, de respect et de solidarité entre les membres.',
-        activities: 'Activités',
-        activitiesText:
-          'Dans le prolongement de cette dynamique, la Ziarra générale de Tivaouane est organisée à partir de 1930. Ce rendez-vous permet aux disciples de se réunir auprès de leur guide religieux, de recevoir ses conseils et de renouveler leur engagement spirituel. Au fil des années, il est devenu un événement important de la vie religieuse tidiane au Sénégal. La Dahiratoul Kiram a ainsi joué un rôle important dans le développement du mouvement des dahiras, en offrant un cadre organisé pour la pratique religieuse, l’apprentissage des enseignements de la Tijaniyya et le renforcement des liens entre les disciples.',
-        link: 'Lien avec Diwane Kiram',
-        linkText:
-          'À travers les générations, la Dahiratoul Kiram demeure associée à la transmission des valeurs islamiques, à la fidélité aux enseignements des guides religieux et à la préservation de l’héritage spirituel de Tivaouane. Diwane Kiram prolonge cette transmission en rendant cet héritage accessible sous forme numérique.',
+          'Diwane Kiram est né de l’initiative d’un disciple de Dahiratoul Kiram Thiaroye Gare, qui a voulu offrir à tous un espace pour lire, apprendre et approfondir sa foi.',
+        howTitle: 'Comment fonctionne Dahiratoul Kiram Thiaroye Gare',
+        howText:
+          'Dahiratoul Kiram Thiaroye Gare rassemble ses disciples autour de rendez-vous réguliers, pour prier ensemble, apprendre et mieux connaître leur deen. Son fonctionnement repose sur trois temps forts :',
+        howItems: [
+          'Guddi Al Jumma, chaque jeudi : la veillée hebdomadaire, rythmée par les chants religieux. Elle se poursuit par un discours de l’Oustaz, qui transmet un enseignement aux disciples.',
+          'Les mardis : des séances de formation, avec l’apprentissage du Coran et d’Al-Akhdari, des obligations en islam et des sunnah.',
+          'Les Jamiya : un grand rassemblement chaque mois, qui réunit tous les disciples.',
+        ],
       },
       social: {
         id: 'reseaux-sociaux',
@@ -164,23 +158,17 @@ export const aboutTranslations = {
       },
       history: {
         id: 'histoire',
-        title: 'تاريخ دائرة الكرام',
+        title: 'تاريخنا',
         intro:
-          'تأسست دائرة الكرام في داكار عام 1927، وهي تواصل عمل الشيخ بابكر سي وتنظّم الحياة الروحية للمريدين التجانيين.',
-        creation: 'التأسيس',
-        creationText: 'السنة: 1927 — المكان: داكار — المؤسسون: الشيخ بابكر سي',
-        context: 'السياق والدوافع',
-        contextText:
-          'بعد وفاة الشيخ الحاج مالك سي عام 1922، خلفه الشيخ بابكر سي كأول خليفة عام للتجانيين. وحرصًا على تقوية إيمان المريدين والحفاظ على تمسكهم بتعاليم الإسلام، شجّع على تجمّع المؤمنين حول الصلاة والتربية الدينية والتضامن والانضباط الروحي. وفي هذا السياق تأسست دائرة الكرام عام 1927 في داكار، وهي منظمة دينية تهدف بشكل خاص إلى جمع المريدين، ومن بينهم أشخاص يعملون في الإدارة، حتى يتمكنوا من مواصلة ممارستهم الدينية رغم التزاماتهم المهنية.',
-        objectives: 'الأهداف',
-        objectivesText:
-          'تقوية الروابط بين المريدين، وتنمية معرفتهم بالدين، وتشجيع الصلوات الجماعية، والحفاظ على علاقة وثيقة بمرشدهم الروحي في تيفوان. كما تساهم دائرة الكرام في تعزيز قيم الأخوة والتعاون والاحترام والتضامن بين الأعضاء.',
-        activities: 'الأنشطة',
-        activitiesText:
-          'في امتداد هذه الدينامية، انتظمت الزيارة العامة لتيفوان ابتداءً من عام 1930. ويتيح هذا الموعد للمريدين الاجتماع حول مرشدهم الديني وتلقي نصائحه وتجديد التزامهم الروحي. وعلى مر السنين أصبح حدثًا مهمًا في الحياة الدينية التجانية في السنغال. وهكذا أدّت دائرة الكرام دورًا مهمًا في تطوير حركة الدوائر، من خلال توفير إطار منظم للممارسة الدينية وتعلّم تعاليم الطريقة التجانية وتعزيز الروابط بين المريدين.',
-        link: 'الصلة بديوان كرام',
-        linkText:
-          'عبر الأجيال، تظل دائرة الكرام مرتبطة بنقل القيم الإسلامية والوفاء بتعاليم المرشدين الدينيين والحفاظ على التراث الروحي لتيفوان. ويواصل ديوان كرام هذه الرسالة بجعل هذا التراث متاحًا رقميًا.',
+          'وُلد ديوان كرام من مبادرة أحد مريدي دائرة الكرام تياروي غار، أراد أن يوفّر للجميع فضاءً للقراءة والتعلّم وتعميق الإيمان.',
+        howTitle: 'كيف تعمل دائرة الكرام تياروي غار',
+        howText:
+          'تجمع دائرة الكرام تياروي غار مريديها حول مواعيد منتظمة، للصلاة معًا والتعلّم ومعرفة دينهم على نحو أفضل. ويقوم عملها على ثلاثة مواعيد أساسية:',
+        howItems: [
+          'غودي الجمعة، كل خميس: السهرة الأسبوعية التي تُحييها الأناشيد الدينية، وتُختتم بخطاب من الأستاذ ينقل فيه تعليمًا إلى المريدين.',
+          'أيام الثلاثاء: حصص تكوينية تشمل تعلّم القرآن والأخضري، وفرائض الإسلام والسنن.',
+          'الجمعية: تجمّع كبير كل شهر يجمع جميع المريدين.',
+        ],
       },
       social: {
         id: 'reseaux-sociaux',
