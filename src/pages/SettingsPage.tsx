@@ -1,14 +1,9 @@
 /* Réglages : apparence, lecture, données locales, installation. */
 
 import { useEffect, useState } from 'react'
-import { CloudDownload, Download, Monitor, Moon, RefreshCw, RotateCcw, Sun, Trash2 } from 'lucide-react'
+import { Download, Monitor, Moon, RotateCcw, Sun, Trash2 } from 'lucide-react'
 import { useSettings, useAppliedSettings, resolveTheme, SCALE_LIMITS } from '../store/useSettings'
 import { useLibrary } from '../store/useLibrary'
-import {
-  getOfflineCacheEntries,
-  syncOfflineCatalog,
-  useOfflineCatalog,
-} from '../services/offlineCatalog'
 import { Button } from '../components/ui/Button'
 import { Reveal } from '../components/motion/Reveal'
 import type { ThemePreference } from '../types/domain'
@@ -27,13 +22,6 @@ export function SettingsPage() {
   const resetLibrary = useLibrary((state) => state.reset)
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null)
   const [online, setOnline] = useState(() => navigator.onLine)
-
-  const offlinePhase = useOfflineCatalog((state) => state.phase)
-  const offlineDone = useOfflineCatalog((state) => state.done)
-  const offlineTotal = useOfflineCatalog((state) => state.total)
-  const offlineError = useOfflineCatalog((state) => state.error)
-  const offlineUpdatedAt = useOfflineCatalog((state) => state.updatedAt)
-  const [cacheEntries, setCacheEntries] = useState<number | null>(null)
 
   /* iOS n'expose pas `beforeinstallprompt` : l'installation se fait à la main
      depuis le menu Partager de Safari. On détecte aussi le mode autonome pour
@@ -69,42 +57,6 @@ export function SettingsPage() {
   }, [])
 
   useAppliedSettings()
-
-  useEffect(() => {
-    let alive = true
-    void getOfflineCacheEntries().then((entries) => {
-      if (alive) setCacheEntries(entries)
-    })
-    return () => {
-      alive = false
-    }
-  }, [offlinePhase, offlineDone])
-
-  const offlineBusy = offlinePhase === 'downloading' || offlinePhase === 'checking'
-  const offlineBadge =
-    offlinePhase === 'ready'
-      ? { label: 'Prêt hors ligne', className: 'badge--mint' }
-      : offlinePhase === 'downloading' || offlinePhase === 'checking'
-        ? { label: 'Téléchargement', className: 'badge--cyan' }
-        : offlinePhase === 'unsupported'
-          ? { label: 'Indisponible', className: 'badge--warn' }
-          : { label: 'Incomplet', className: 'badge--warn' }
-
-  const offlineMessage =
-    offlinePhase === 'downloading'
-      ? `Téléchargement en cours — ${offlineDone} sur ${offlineTotal} fichiers.`
-      : offlinePhase === 'ready'
-        ? `${offlineTotal} fichiers disponibles sans connexion${
-            offlineUpdatedAt
-              ? ` · vérifié le ${new Date(offlineUpdatedAt).toLocaleDateString('fr-FR')}`
-              : ''
-          }.`
-        : offlinePhase === 'unsupported'
-          ? 'Ce navigateur ne prend pas en charge le stockage hors ligne.'
-          : offlinePhase === 'error'
-            ? (offlineError ??
-              'Le téléchargement doit être repris pour une lecture hors ligne complète.')
-            : 'Le catalogue n’est pas encore téléchargé sur cet appareil.'
 
   return (
     <div className="page-stack">
@@ -312,63 +264,6 @@ export function SettingsPage() {
                 {online ? 'En ligne' : 'Hors ligne'}
               </span>
             </div>
-          </div>
-        </section>
-      </Reveal>
-
-      <Reveal className="section">
-        <section className="panel">
-          <h2>Hors ligne</h2>
-
-          <div className="panel-rows">
-            <div className="panel-row">
-              <div>
-                <strong>Catalogue hors ligne</strong>
-                <p className="muted small">{offlineMessage}</p>
-                {cacheEntries !== null ? (
-                  <p className="muted small">
-                    {cacheEntries} fichier(s) dans le cache de cet appareil.
-                  </p>
-                ) : null}
-              </div>
-              <span className={`badge ${offlineBadge.className}`}>{offlineBadge.label}</span>
-            </div>
-
-            {isIos && !installed ? (
-              <p className="muted small">
-                Sur iPhone et iPad : ajoutez d’abord l’application à l’écran d’accueil,
-                puis ouvrez-la une fois en ligne pour lancer le téléchargement.
-              </p>
-            ) : null}
-
-            {offlinePhase !== 'ready' ? (
-              <p className="muted small">
-                Laissez l’application ouverte et connectée : le téléchargement reprend
-                automatiquement là où il s’est arrêté.
-              </p>
-            ) : null}
-          </div>
-
-          <div className="panel-actions">
-            <Button
-              variant="outline"
-              size="sm"
-              icon={
-                offlinePhase === 'error' ? (
-                  <RefreshCw size={15} />
-                ) : (
-                  <CloudDownload size={15} />
-                )
-              }
-              disabled={!online || offlineBusy || offlinePhase === 'unsupported'}
-              onClick={() => void syncOfflineCatalog()}
-            >
-              {offlinePhase === 'error'
-                ? 'Reprendre'
-                : offlinePhase === 'ready'
-                  ? 'Vérifier'
-                  : 'Télécharger'}
-            </Button>
           </div>
         </section>
       </Reveal>

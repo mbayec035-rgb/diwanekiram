@@ -3723,7 +3723,7 @@ kbd {
   }
 }
 /* =========================================================
-   Bandeaux applicatifs — hors ligne et mise à jour
+   Bandeau de mise à jour
    ========================================================= */
 
 .app-notices {
@@ -3749,13 +3749,6 @@ kbd {
   font-size: var(--step--1);
 }
 
-.offline-banner--progress,
-.offline-banner--error {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-}
-
 .offline-banner-text {
   display: grid;
   gap: 2px;
@@ -3772,16 +3765,6 @@ kbd {
   line-height: 1.45;
 }
 
-.offline-banner--ready {
-  border-color: rgba(94, 234, 212, 0.35);
-  background: linear-gradient(115deg, rgba(94, 234, 212, 0.12), rgba(34, 211, 238, 0.04));
-}
-
-.offline-banner--error {
-  border-color: rgba(245, 200, 119, 0.4);
-  background: linear-gradient(115deg, rgba(245, 200, 119, 0.12), rgba(245, 200, 119, 0.03));
-}
-
 .offline-banner--update {
   border-color: rgba(34, 211, 238, 0.4);
   background: linear-gradient(115deg, rgba(34, 211, 238, 0.14), rgba(94, 234, 212, 0.05));
@@ -3792,22 +3775,6 @@ kbd {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
-}
-
-.offline-progress {
-  grid-column: 1 / -1;
-  height: 4px;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.08);
-  overflow: hidden;
-}
-
-.offline-progress span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--accent-grad);
-  transition: width var(--dur-base) var(--ease-out);
 }
 
 /* =========================================================
@@ -3877,11 +3844,6 @@ kbd {
 }
 
 @media (max-width: 640px) {
-  .offline-banner--progress,
-  .offline-banner--error {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .offline-banner-actions {
     width: 100%;
   }

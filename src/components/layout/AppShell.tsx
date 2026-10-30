@@ -5,7 +5,6 @@ import { useEffect } from 'react'
 import { TopBar } from './TopBar'
 import { SideNav, MobileTabBar } from './Nav'
 import { UpdateBanner } from './UpdateBanner'
-import { OfflineStatus } from './OfflineStatus'
 import { Ambience } from '../ambience/Ambience'
 import { PageTransition, ScrollProgress } from '../motion/Feedback'
 import { useAppliedSettings } from '../../store/useSettings'
@@ -50,7 +49,6 @@ export function AppShell() {
       <main className="shell-main" id="contenu">
         <div className="app-notices">
           <UpdateBanner />
-          <OfflineStatus />
         </div>
         <PageTransition>
           <Outlet />

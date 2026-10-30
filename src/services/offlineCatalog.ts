@@ -1,13 +1,13 @@
 /* =========================================================
    Catalogue hors ligne.
-   Le service worker ne précache plus que le noyau de
+   Le service worker ne précache que le noyau de
    l'application (HTML, JS, CSS, polices, icônes). Les JSON du
-   catalogue sont téléchargés ici, par lots, avec reprise et
-   progression : un réseau mobile capricieux ne peut plus
-   annuler tout le précache d'un coup.
+   catalogue sont téléchargés ici, par lots, avec reprise : un
+   réseau mobile capricieux ne peut plus annuler tout le
+   précache d'un coup. Tout se fait en arrière-plan, sans
+   interface ; les erreurs vont uniquement dans la console.
    ========================================================= */
 
-import { create } from 'zustand'
 import type { Manifest } from '../types/domain'
 
 export const OFFLINE_CACHE = 'diwanekiram-data-v3'
@@ -16,33 +16,6 @@ const DATA_ROOT = `${import.meta.env.BASE_URL}data`.replace(/\/{2,}/g, '/')
 const STATE_KEY = 'dk.offline'
 const CONCURRENCY = 6
 const RETRIES = 3
-
-export type OfflinePhase =
-  | 'idle'
-  | 'checking'
-  | 'downloading'
-  | 'ready'
-  | 'error'
-  | 'unsupported'
-
-export interface OfflineCatalogState {
-  phase: OfflinePhase
-  /** Fichiers réellement disponibles dans le cache. */
-  done: number
-  total: number
-  error: string | null
-  generatedAt: string | null
-  updatedAt: number | null
-}
-
-export const useOfflineCatalog = create<OfflineCatalogState>(() => ({
-  phase: 'idle',
-  done: 0,
-  total: 0,
-  error: null,
-  generatedAt: null,
-  updatedAt: null,
-}))
 
 interface PersistedOfflineState {
   generatedAt: string
@@ -151,23 +124,18 @@ let running: Promise<void> | null = null
 
 /** Télécharge (ou vérifie) le catalogue hors ligne. Un seul lot à la fois. */
 export function syncOfflineCatalog(options: { force?: boolean } = {}): Promise<void> {
-  running ??= runSync(options).finally(() => {
-    running = null
-  })
+  running ??= runSync(options)
+    .catch((error: unknown) => {
+      console.error('Catalogue hors ligne : la synchronisation a échoué.', error)
+    })
+    .finally(() => {
+      running = null
+    })
   return running
 }
 
-/** À appeler une fois au démarrage : restaure l'état puis lance le lot. */
+/** À appeler une fois au démarrage : lance le lot en arrière-plan. */
 export function initOfflineCatalog(): void {
-  const persisted = readPersisted()
-  if (persisted) {
-    useOfflineCatalog.setState({
-      total: persisted.total,
-      generatedAt: persisted.generatedAt,
-      updatedAt: persisted.updatedAt,
-    })
-  }
-
   window.setTimeout(() => void syncOfflineCatalog(), 1200)
 }
 
@@ -175,11 +143,9 @@ async function runSync({ force = false }: { force?: boolean }): Promise<void> {
   if (typeof window === 'undefined') return
 
   if (!('caches' in window) || !('serviceWorker' in navigator)) {
-    useOfflineCatalog.setState({ phase: 'unsupported' })
+    console.error('Catalogue hors ligne : le stockage hors ligne n’est pas pris en charge.')
     return
   }
-
-  useOfflineCatalog.setState({ phase: 'checking', error: null })
 
   const persisted = readPersisted()
   const online = navigator.onLine
@@ -213,12 +179,11 @@ async function runSync({ force = false }: { force?: boolean }): Promise<void> {
   }
 
   if (!manifest) {
-    useOfflineCatalog.setState({
-      phase: 'error',
-      error: online
-        ? 'Le catalogue n’a pas pu être chargé. Réessayez dans un instant.'
-        : 'Connectez-vous à Internet pour télécharger le catalogue.',
-    })
+    console.error(
+      online
+        ? 'Catalogue hors ligne : le catalogue n’a pas pu être chargé.'
+        : 'Catalogue hors ligne : aucune version en cache, connexion indisponible.',
+    )
     return
   }
 
@@ -241,37 +206,35 @@ async function runSync({ force = false }: { force?: boolean }): Promise<void> {
 
   const files = buildOfflineFileList(currentManifest)
   const total = files.length
-  useOfflineCatalog.setState({ total, generatedAt: currentManifest.generatedAt })
 
   let done = 0
   for (const file of files) {
     if (await cache.match(absolute(file))) done += 1
   }
-  useOfflineCatalog.setState({ done })
 
-  const finish = (phase: OfflinePhase, error: string | null = null) => {
-    const updatedAt = Date.now()
-    writePersisted({ generatedAt: currentManifest.generatedAt, updatedAt, total })
-    useOfflineCatalog.setState({ phase, error, updatedAt, total, done })
+  const persist = () => {
+    writePersisted({
+      generatedAt: currentManifest.generatedAt,
+      updatedAt: Date.now(),
+      total,
+    })
   }
 
   if (done === total) {
-    finish('ready')
+    persist()
     return
   }
 
   if (!online) {
-    useOfflineCatalog.setState({
-      phase: 'error',
-      error: `${done} fichier(s) sur ${total} sont disponibles hors ligne. Reconnectez-vous pour terminer le téléchargement.`,
-    })
+    console.error(
+      `Catalogue hors ligne : ${done} fichier(s) sur ${total} sont en cache, téléchargement en attente de connexion.`,
+    )
     return
   }
 
-  useOfflineCatalog.setState({ phase: 'downloading' })
-
   let failures = 0
   let aborted = false
+  let lastError: unknown = null
 
   await mapLimit(files, CONCURRENCY, async (file) => {
     if (aborted) {
@@ -286,31 +249,21 @@ async function runSync({ force = false }: { force?: boolean }): Promise<void> {
       const response = await fetchWithRetry(url)
       await cache.put(url, response)
       done += 1
-      useOfflineCatalog.setState({ done })
-    } catch {
+    } catch (error) {
+      lastError = error
       failures += 1
       if (!navigator.onLine) aborted = true
     }
   })
 
+  persist()
+
   if (failures > 0) {
-    finish(
-      'error',
+    console.error(
       aborted
-        ? 'La connexion a été interrompue. Le téléchargement reprendra automatiquement.'
-        : `${failures} fichier(s) n’ont pas pu être téléchargés. Réessayez pour terminer.`,
+        ? 'Catalogue hors ligne : la connexion a été interrompue, le téléchargement reprendra automatiquement.'
+        : `Catalogue hors ligne : ${failures} fichier(s) n’ont pas pu être téléchargés.`,
+      lastError,
     )
-    return
   }
-
-  finish('ready')
-}
-
-/** Nombre de fichiers présents dans le cache du catalogue. */
-export async function getOfflineCacheEntries(): Promise<number | null> {
-  if (typeof caches === 'undefined') return null
-  if (!(await caches.has(OFFLINE_CACHE))) return 0
-
-  const cache = await caches.open(OFFLINE_CACHE)
-  return (await cache.keys()).length
 }
