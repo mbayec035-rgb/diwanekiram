@@ -7,7 +7,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      /* Le nouveau service worker attend le clic « Recharger » : il ne
+         supprime plus les anciens chunks sous une page ouverte. */
+      registerType: 'prompt',
       includeAssets: ['favicon.svg'],
       manifest: {
         name: 'DiwaneKiram — Bibliothèque des Xassidas',
@@ -30,15 +32,33 @@ export default defineConfig({
         ],
       },
       workbox: {
-        /* Tout le catalogue est précaché : les 556 fichiers JSON (5,5 Mo)
-           contiennent le manifeste, les auteurs, les versets et les
-           traductions. Une fois l'application ouverte en ligne, chaque œuvre
-           reste lisible hors ligne — y compris celles jamais consultées. */
-        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,json}'],
+        /* Le noyau applicatif seul est précaché : HTML, JS, CSS, polices,
+           icônes. Il s'installe en quelques secondes et garantit que
+           l'application s'ouvre hors ligne, même sur un réseau instable.
+           Les JSON du catalogue sont téléchargés séparément, par lots,
+           avec reprise et progression (voir src/services/offlineCatalog.ts). */
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,ico}'],
         navigateFallback: 'index.html',
         /* Supprime les anciens précaches lors d'une mise à jour du service
            worker, pour ne pas conserver indéfiniment les fichiers obsolètes. */
         cleanupOutdatedCaches: true,
+        runtimeCaching: [
+          {
+            /* Catalogue : servi depuis le cache, alimenté par le
+               téléchargement repris. Les URL ne sont pas versionnées, donc
+               le service worker change de cache quand le manifeste change. */
+            urlPattern: /\/data\/.*\.json$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'diwanekiram-data-v3',
+              expiration: {
+                maxEntries: 700,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+        ],
       },
       devOptions: { enabled: false },
     }),

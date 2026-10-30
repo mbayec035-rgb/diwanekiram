@@ -4,6 +4,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { createBrowserRouter, useLocation } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { AppShell } from './components/layout/AppShell'
+import { RouteError } from './components/errors/RouteError'
 import { Skeleton } from './components/ui/Bits'
 
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })))
@@ -50,6 +51,9 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <AppShell />,
+    /* Filet de sécurité : un chunk manquant (mise à jour ou hors ligne)
+       affiche un écran utile au lieu de l'erreur brute de React Router. */
+    errorElement: <RouteError />,
     children: [
       { index: true, element: withSuspense(<HomePage />) },
       { path: 'bibliotheque', element: withSuspense(<LibraryPage />) },

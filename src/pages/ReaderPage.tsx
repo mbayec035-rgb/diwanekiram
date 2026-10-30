@@ -35,7 +35,11 @@ export function ReaderPage() {
   const xassida = catalog?.xassidas.find((entry) => entry.slug === slug)
   const author = xassida ? catalog?.authorsById.get(xassida.authorId) : undefined
 
-  const { data: document, error: versesError } = useAsync(
+  const {
+    data: document,
+    error: versesError,
+    reload: reloadVerses,
+  } = useAsync(
     () => (item ? fetchVerses(item) : Promise.resolve(null)),
     [item?.file],
   )
@@ -395,7 +399,9 @@ export function ReaderPage() {
           />
         </DisplayRail>
 
-        {versesError ? <ErrorState message={versesError.message} /> : null}
+        {versesError ? (
+          <ErrorState message={versesError.message} onRetry={reloadVerses} />
+        ) : null}
 
         <ChapterStepper
           chapter={chapter}

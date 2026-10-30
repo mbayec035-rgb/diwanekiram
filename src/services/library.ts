@@ -22,17 +22,32 @@ const DATA_ROOT = `${import.meta.env.BASE_URL}data`.replace(/\/{2,}/g, '/')
 
 const cache = new Map<string, Promise<unknown>>()
 
+function offlineMessage(): string {
+  return 'Cette partie du catalogue n’est pas encore disponible hors ligne. Reconnectez-vous à Internet quelques instants pour terminer le téléchargement, puis réessayez.'
+}
+
 async function getJson<T>(file: string): Promise<T> {
   const cached = cache.get(file)
   if (cached) return cached as Promise<T>
 
   const request = fetch(`${DATA_ROOT}/${file}`)
     .then((response) => {
-      if (!response.ok) throw new Error(`Catalogue indisponible (${response.status}) — ${file}`)
+      if (!response.ok) {
+        const online = typeof navigator === 'undefined' || navigator.onLine
+        throw new Error(
+          online
+            ? `Catalogue indisponible (${response.status}) — ${file}`
+            : offlineMessage(),
+        )
+      }
       return response.json() as Promise<T>
     })
     .catch((error: unknown) => {
       cache.delete(file)
+      const offline = typeof navigator !== 'undefined' && !navigator.onLine
+      if (offline && error instanceof TypeError) {
+        throw new Error(offlineMessage())
+      }
       throw error
     })
 

@@ -1,7 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
-import { registerSW } from 'virtual:pwa-register'
 
 /* Les transcriptions phonétiques utilisent des macrons et des lettres
    pointées (ā, ḥ, ṣ, ṭ, ẓ, ʿ) : le jeu `latin` ne les couvre pas, il faut
@@ -24,8 +23,6 @@ import { router } from './router'
    Il est désormais précaché : on supprime le cache résiduel des installations
    existantes pour ne pas conserver deux copies des mêmes JSON. */
 if ('caches' in window) void caches.delete('diwanekiram-data-v2')
-
-registerSW({ immediate: true })
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -3722,3 +3722,172 @@ kbd {
     text-align: start;
   }
 }
+/* =========================================================
+   Bandeaux applicatifs — hors ligne et mise à jour
+   ========================================================= */
+
+.app-notices {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.app-notices:empty {
+  display: none;
+}
+
+.offline-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-card);
+  font-size: var(--step--1);
+}
+
+.offline-banner--progress,
+.offline-banner--error {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.offline-banner-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.offline-banner-text strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.offline-banner-text span {
+  color: var(--text-soft);
+  line-height: 1.45;
+}
+
+.offline-banner--ready {
+  border-color: rgba(94, 234, 212, 0.35);
+  background: linear-gradient(115deg, rgba(94, 234, 212, 0.12), rgba(34, 211, 238, 0.04));
+}
+
+.offline-banner--error {
+  border-color: rgba(245, 200, 119, 0.4);
+  background: linear-gradient(115deg, rgba(245, 200, 119, 0.12), rgba(245, 200, 119, 0.03));
+}
+
+.offline-banner--update {
+  border-color: rgba(34, 211, 238, 0.4);
+  background: linear-gradient(115deg, rgba(34, 211, 238, 0.14), rgba(94, 234, 212, 0.05));
+}
+
+.offline-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.offline-progress {
+  grid-column: 1 / -1;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.offline-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent-grad);
+  transition: width var(--dur-base) var(--ease-out);
+}
+
+/* =========================================================
+   Écran d'erreur de route
+   ========================================================= */
+
+.error-screen {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6) var(--space-4);
+  background:
+    radial-gradient(60rem 40rem at 50% -10%, rgba(34, 211, 238, 0.12), transparent 70%),
+    var(--bg);
+}
+
+.error-card {
+  width: min(34rem, 100%);
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
+}
+
+.error-card h1 {
+  font-size: var(--step-2);
+  line-height: 1.15;
+}
+
+.error-card p {
+  margin: 0;
+}
+
+.error-mark {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  border: 1px solid rgba(245, 200, 119, 0.45);
+  background: rgba(245, 200, 119, 0.12);
+  color: var(--amber);
+  font-weight: 700;
+}
+
+.error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.error-detail {
+  width: 100%;
+  max-height: 16rem;
+  overflow: auto;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 640px) {
+  .offline-banner--progress,
+  .offline-banner--error {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .offline-banner-actions {
+    width: 100%;
+  }
+
+  .offline-banner-actions > * {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
